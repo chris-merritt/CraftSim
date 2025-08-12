@@ -574,6 +574,10 @@ function CraftSim.RECIPE_SCAN:SendToCraftQueue()
                 restockAmount = recipeData.cooldownData.currentCharges
             end
 
+            if recipeData.baseItemAmount > 1 then
+                restockAmount = math.floor(restockAmount / recipeData.baseItemAmount)
+            end
+            
             if restockAmount >=1 then
                 CraftSim.CRAFTQ:AddRecipe { recipeData = recipeData, amount = restockAmount }
             end
