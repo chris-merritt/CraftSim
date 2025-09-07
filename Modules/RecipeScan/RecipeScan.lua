@@ -578,8 +578,6 @@ function CraftSim.RECIPE_SCAN:SendToCraftQueue()
                 end
             end
 
-            if 
-
             if restockAmount >=2 then
                 CraftSim.CRAFTQ:AddRecipe { recipeData = recipeData, amount = restockAmount }
             end
