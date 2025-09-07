@@ -571,10 +571,16 @@ function CraftSim.RECIPE_SCAN:SendToCraftQueue()
             end
 
             if recipeData.cooldownData.isCooldownRecipe == true and recipeData.cooldownData.currentCharges < restockAmount then
-                restockAmount = recipeData.cooldownData.currentCharges
+                if recipeData.cooldownData.currentCharges >= recipeData.cooldownData.maxCharges/2 then
+                    restockAmount = recipeData.cooldownData.currentCharges
+                else 
+                    restockAmount = 0
+                end
             end
 
-            if restockAmount >=1 then
+            if 
+
+            if restockAmount >=2 then
                 CraftSim.CRAFTQ:AddRecipe { recipeData = recipeData, amount = restockAmount }
             end
             
