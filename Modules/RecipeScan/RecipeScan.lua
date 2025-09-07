@@ -554,20 +554,23 @@ function CraftSim.RECIPE_SCAN:SendToCraftQueue()
 
             if TSM_API then
                 local saleRateThreshold = CraftSim.DB.OPTIONS:Get("RECIPESCAN_SEND_TO_CRAFTQUEUE_TSM_SALERATE_THRESHOLD")
-                local resultSaleRate = CraftSimTSM:GetItemSaleRate(recipeData.resultData.expectedItem:GetItemLink())
-
-                if resultSaleRate < saleRateThreshold then
-                    frameDistributor:Continue()
-                    return
+                if saleRateThreshold > 0 then
+                    local resultSaleRate = CraftSimTSM:GetItemSaleRate(recipeData.resultData.expectedItem:GetItemLink())
+                    if resultSaleRate < saleRateThreshold then
+                        frameDistributor:Continue()
+                        return
+                    end
                 end
             end
 
             local restockAmount = CraftSim.DB.OPTIONS:Get("RECIPESCAN_SEND_TO_CRAFTQUEUE_DEFAULT_QUEUE_AMOUNT") or 0
 
             if TSM_API and CraftSim.DB.OPTIONS:Get("RECIPESCAN_SEND_TO_CRAFTQUEUE_USE_TSM_RESTOCK_EXPRESSION") then
-                local tsmItemString = TSM_API.ToItemString(recipeData.resultData.expectedItem:GetItemLink())
-                restockAmount = TSM_API.GetCustomPriceValue(CraftSim.DB.OPTIONS:Get("TSM_RESTOCK_KEY_ITEMS"),
-                    tsmItemString) or 0
+                if recipeData.resultData.expectedItem:GetItemLink() ~= nil then
+                    local tsmItemString = TSM_API.ToItemString(recipeData.resultData.expectedItem:GetItemLink())
+                    restockAmount = TSM_API.GetCustomPriceValue(CraftSim.DB.OPTIONS:Get("TSM_RESTOCK_KEY_ITEMS"),
+                        tsmItemString) or 0
+                end
             end
 
             if recipeData.cooldownData.isCooldownRecipe == true and recipeData.cooldownData.currentCharges < restockAmount then
@@ -576,6 +579,10 @@ function CraftSim.RECIPE_SCAN:SendToCraftQueue()
                 else 
                     restockAmount = 0
                 end
+            end
+
+            if recipeData.baseItemAmount > 1 then
+                restockAmount = math.floor(restockAmount / recipeData.baseItemAmount) 
             end
 
             if restockAmount >=2 then
