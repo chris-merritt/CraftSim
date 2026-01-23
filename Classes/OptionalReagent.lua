@@ -9,7 +9,10 @@ CraftSim.OptionalReagent = CraftSim.CraftSimObject:extend()
 
 ---@param craftingReagent CraftingReagent
 function CraftSim.OptionalReagent:new(craftingReagent)
-    self.item = Item:CreateFromItemID(craftingReagent.itemID)
+    -- TODO this is a minimal solution for the new support for currencies (crests) as optionals 
+    if craftingReagent.itemID then
+        self.item = Item:CreateFromItemID(craftingReagent.itemID)
+    end
     ---@type CraftSim.ProfessionStats
     self.professionStats = CraftSim.ProfessionStats()
     local reagentData = CraftSim.OPTIONAL_REAGENT_DATA[craftingReagent.itemID]
@@ -60,7 +63,8 @@ function CraftSim.OptionalReagent:Debug()
 end
 
 function CraftSim.OptionalReagent:Copy()
-    local copy = CraftSim.OptionalReagent({ itemID = self.item:GetItemID() })
+    -- TODO see line 12
+    local copy = CraftSim.OptionalReagent({ itemID = self.item and self.item:GetItemID() or nil })
     return copy
 end
 
