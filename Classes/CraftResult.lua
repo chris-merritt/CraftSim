@@ -78,7 +78,7 @@ function CraftSim.CraftResult:new(recipeData, craftingItemResultData, aNumCrafts
         if craftResult.resourcesReturned and handledOperationIds[craftResult.operationID] ~= true then
             self.triggeredResourcefulness = true
             for _, craftingResourceReturnInfo in pairs(craftResult.resourcesReturned) do
-                local craftResultSavedReagent = CraftSim.CraftResultReagent(recipeData, craftingResourceReturnInfo.itemID, craftingResourceReturnInfo.quantity)
+                local craftResultSavedReagent = CraftSim.CraftResultReagent(recipeData, craftingResourceReturnInfo.reagent.itemID, craftingResourceReturnInfo.quantity)
                 self.savedCosts = self.savedCosts + craftResultSavedReagent.costs
                 table.insert(self.savedReagents, craftResultSavedReagent)
                  -- Workaround for blizzard bug where saved salvage items aren't included in craftingItemResultData[].resourcesReturned for complex salvage recipes
@@ -245,29 +245,26 @@ function CraftSim.CraftResult:Debug()
     local debugLines = {
         "recipeID: " .. tostring(self.recipeID),
         "profit: " .. CraftSim.UTIL:FormatMoney(self.profit, true),
-        "expectedAverageProfit: " .. CraftSim.UTIL:FormatMoney(self.expectedAverageProfit, true),
-        "expectedAverageSavedCosts: " .. CraftSim.UTIL:FormatMoney(self.expectedAverageSavedCosts, true),
         "expectedQuality: " .. tostring(self.expectedQuality),
-        "craftingChance: " .. tostring((self.craftingChance or 0) * 100) .. "%",
         "triggeredMulticraft: " .. tostring(self.triggeredMulticraft),
         "triggeredResourcefulness: " .. tostring(self.triggeredResourcefulness),
     }
     if #self.craftResultItems > 0 then
         table.insert(debugLines, "Items:")
-        table.foreach(self.craftResultItems, function(_, resultItem)
+        for _, resultItem in pairs(self.craftResultItems) do
             local lines = resultItem:Debug()
             lines = CraftSim.GUTIL:Map(lines, function(line) return "-" .. line end)
             debugLines = CraftSim.GUTIL:Concat({ debugLines, lines })
-        end)
+        end
     end
 
     if #self.savedReagents > 0 then
         table.insert(debugLines, "SavedReagents:")
-        table.foreach(self.savedReagents, function(_, savedReagent)
+        for _, savedReagent in pairs(self.savedReagents) do
             local lines = savedReagent:Debug()
             lines = CraftSim.GUTIL:Map(lines, function(line) return "-" .. line end)
             debugLines = CraftSim.GUTIL:Concat({ debugLines, lines })
-        end)
+        end
     end
 
 
@@ -280,10 +277,7 @@ function CraftSim.CraftResult:GetJSON(indent)
     jb:Begin()
     jb:Add("recipeID", self.recipeID)
     jb:Add("profit", self.profit)
-    jb:Add("expectedAverageProfit", self.expectedAverageProfit)
-    jb:Add("expectedAverageSavedCosts", self.expectedAverageSavedCosts)
     jb:Add("expectedQuality", self.expectedQuality)
-    jb:Add("craftingChance", self.craftingChance)
     jb:Add("triggeredMulticraft", self.triggeredMulticraft)
     jb:Add("triggeredResourcefulness", self.triggeredResourcefulness)
     jb:AddList("craftResultItems", self.craftResultItems)

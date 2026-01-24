@@ -7,7 +7,6 @@ local GUTIL = CraftSim.GUTIL
 local concentrationCostCache = {}
 local concentrationCacheStats = { hits = 0, misses = 0 }
 
-local systemPrint = print
 local print = CraftSim.DEBUG:RegisterDebugID("Classes.RecipeData")
 
 -- Helper function to generate cache key for UpdateConcentrationCost
@@ -563,9 +562,9 @@ end
 
 ---@param itemIDList number[]
 function CraftSim.RecipeData:SetOptionalReagents(itemIDList)
-    table.foreach(itemIDList, function(_, itemID)
+    for _, itemID in pairs(itemIDList) do
         self:SetOptionalReagent(itemID)
-    end)
+    end
     self:Update()
 end
 
@@ -1322,7 +1321,7 @@ end
 ---@field optimizeGear? boolean
 ---@field optimizeReagentOptions? CraftSim.RecipeData.OptimizeReagentOptions
 
----@deprecated
+---@deprecated TODO Why is this deprecated?
 ---Optimizes the recipeData's reagents and gear for highest profit and caches result for crafter
 ---@param options? CraftSim.RecipeData.OptimizeProfitOptions
 function CraftSim.RecipeData:OptimizeProfit(options)
@@ -1873,6 +1872,12 @@ function CraftSim.RecipeData:IsOldWorldRecipe()
     local recipeExpansionID = self.professionData.expansionID
     if recipeExpansionID == "BASE" then return true end
     return recipeExpansionID < CraftSim.CONST.EXPANSION_IDS.DRAGONFLIGHT
+end
+
+function CraftSim.RecipeData:IsSimplifiedQualityRecipe()
+    local recipeExpansionID = self.professionData.expansionID
+    if recipeExpansionID == "BASE" then return true end
+    return recipeExpansionID >= CraftSim.CONST.EXPANSION_IDS.MIDNIGHT
 end
 
 ---@param expansionID CraftSim.EXPANSION_IDS

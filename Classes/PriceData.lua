@@ -1,6 +1,7 @@
 ---@class CraftSim
 local CraftSim = select(2, ...)
 
+---@source ../Libs/GUTIL/GUTIL.lua
 local GUTIL = CraftSim.GUTIL
 
 
@@ -121,12 +122,14 @@ function CraftSim.PriceData:Update()
                 -- assume cheapest
                 local itemIDQ1 = reagent.items[1].item:GetItemID()
                 local itemIDQ2 = reagent.items[2].item:GetItemID()
-                local itemIDQ3 = reagent.items[3].item:GetItemID()
+                -- Midnight reagents only have 2-tier quality
+                local itemIDQ3 = reagent.items[3] and reagent.items[3].item:GetItemID() or nil
                 local reagentPriceInfoQ1 = self.reagentPriceInfos[itemIDQ1]
                 local reagentPriceInfoQ2 = self.reagentPriceInfos[itemIDQ2]
-                local reagentPriceInfoQ3 = self.reagentPriceInfos[itemIDQ3]
-                local cheapestItemPrice = math.min(reagentPriceInfoQ1.itemPrice, reagentPriceInfoQ2.itemPrice,
-                    reagentPriceInfoQ3.itemPrice)
+                local reagentPriceInfoQ3 = itemIDQ3 and self.reagentPriceInfos[itemIDQ3] or nil
+                local cheapestItemPrice = reagentPriceInfoQ3 and
+                                            math.min(reagentPriceInfoQ1.itemPrice, reagentPriceInfoQ2.itemPrice, reagentPriceInfoQ3.itemPrice) or
+                                            math.min(reagentPriceInfoQ1.itemPrice, reagentPriceInfoQ2.itemPrice)
                 local reagentCosts = cheapestItemPrice * reagent.requiredQuantity
                 self.craftingCosts = self.craftingCosts + reagentCosts
                 if not isOrderReagent then
@@ -215,7 +218,7 @@ function CraftSim.PriceData:Update()
 
     local expectedYieldPerCraft = self.recipeData.resultData.expectedYieldPerCraft
     self.averageCraftingCosts = self.craftingCosts - self.resourcefulnessSavedCostsAverage
-    self.expectedCostsPerItem = self.averageCraftingCosts / expectedYieldPerCraft
+    self.expectedCostsPerItem = self.averageCraftingCosts / (expectedYieldPerCraft > 0 and expectedYieldPerCraft or 1)
 
     print("calculated crafting costs: " .. tostring(self.craftingCosts))
 end
@@ -260,13 +263,16 @@ function CraftSim.PriceData:UpdateReagentPriceInfos()
     end
 
     for _, optionalReagent in ipairs(possibleOptionals) do
-        local itemID = optionalReagent.item:GetItemID()
-        local itemPrice, priceInfo = CraftSim.PRICE_SOURCE:GetMinBuyoutByItemID(itemID, true, false,
-            useSubRecipes and self.recipeData.optimizedSubRecipes[itemID])
-        self.reagentPriceInfos[itemID] = {
-            itemPrice = itemPrice,
-            priceInfo = priceInfo,
-        }
+        -- see Classes/OptionalReagent:12
+        if optionalReagent.item then
+            local itemID = optionalReagent.item:GetItemID()
+            local itemPrice, priceInfo = CraftSim.PRICE_SOURCE:GetMinBuyoutByItemID(itemID, true, false,
+                useSubRecipes and self.recipeData.optimizedSubRecipes[itemID])
+            self.reagentPriceInfos[itemID] = {
+                itemPrice = itemPrice,
+                priceInfo = priceInfo,
+            }
+        end
     end
 end
 

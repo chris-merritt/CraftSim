@@ -129,7 +129,7 @@ def map(download, buildVersion):
 
                 amount = int(professionEffect["Amount"]) * reagentEffectPct
                 statMap[statName] = amount
-                printD(f"- ProfessionEffect {professionEffect["ID"]} / {professionEffectEnum["ID"]} : {statName} -> {amount}", debug)
+                printD(f"- ProfessionEffect {professionEffect['ID']} / {professionEffectEnum['ID']} : {statName} -> {amount}", debug)
 
         printD(f"Final StatMap for item {itemID}: {statMap}", debug)
         if len(statMap) > 0:
