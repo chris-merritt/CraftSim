@@ -82,7 +82,7 @@ function CraftSim.CraftResult:new(recipeData, craftingItemResultData, aNumCrafts
                 self.savedCosts = self.savedCosts + craftResultSavedReagent.costs
                 table.insert(self.savedReagents, craftResultSavedReagent)
                  -- Workaround for blizzard bug where saved salvage items aren't included in craftingItemResultData[].resourcesReturned for complex salvage recipes
-                if salvageItemId == craftingResourceReturnInfo.itemID then
+                if salvageItemId == craftingResourceReturnInfo.reagent.itemID then
                     salvageItemSaved = true
                 else
                     nonSalvageQtySaved = nonSalvageQtySaved + craftingResourceReturnInfo.quantity
