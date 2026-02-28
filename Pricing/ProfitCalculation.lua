@@ -64,7 +64,7 @@ function CraftSim.CALC:CalculateCommissionProfit(recipeData)
             if not reward.currencyType then -- skip if Artisan's Moxie currency
                 local itemID = Item:CreateFromItemLink(reward.itemLink):GetItemID()
                 if CraftSim.CONST.PATRON_ORDERS_REAGENT_BAG_REWARD_ITEMS[itemID] then
-                    comissionProfit = comissionProfit + CraftSim.DB.OPTIONS:Get("CRAFTQUEUE_QUEUE_PATRON_ORDERS_REAGENT_BAG_VALUE")
+                    comissionProfit = comissionProfit + (TSM_API.GetCustomPriceValue("artisanspayout", "i:" .. itemID) or  CraftSim.DB.OPTIONS:Get("CRAFTQUEUE_QUEUE_PATRON_ORDERS_REAGENT_BAG_VALUE"))
                 else
                     local price = CraftSim.PRICE_SOURCE:GetMinBuyoutByItemID(itemID)
                     price = price * CraftSim.CONST.AUCTION_HOUSE_CUT
