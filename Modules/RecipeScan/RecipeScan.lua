@@ -688,6 +688,10 @@ function CraftSim.RECIPE_SCAN:SendToCraftQueue()
                 restockAmount = math.max(0, restockAmount - owned)
             end
 
+            if recipeData.baseItemAmount > 1 then
+                restockAmount = math.floor(restockAmount / recipeData.baseItemAmount)
+            end
+
             if recipeData.cooldownData.isCooldownRecipe == true and recipeData.cooldownData.currentCharges < restockAmount then
                 restockAmount = recipeData.cooldownData.currentCharges
             end
