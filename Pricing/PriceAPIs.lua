@@ -189,6 +189,30 @@ function CraftSimTSM:GetMinBuyoutByItemLink(itemLink, isReagent)
     return CraftSimTSM:GetMinBuyoutByTSMItemString(tsmItemString, isReagent)
 end
 
+---@param idOrLink number | string
+---@param isGear boolean?
+function CraftSimTSM:GetTSMItemString(idOrLink, isGear)
+    local tsmItemString
+    if not idOrLink then
+        return
+    elseif  type(idOrLink) == 'string' then
+        DLAPI.DebugLog("CraftSim", "idOrLink: "..idOrLink)
+        local itemLink = idOrLink
+        DLAPI.DebugLog("CraftSim", "itemLink: "..gsub(itemLink,"|","||"))
+        local _, _, _, itemLevel = C_Item.GetItemInfo(itemLink)
+        local itemID = string.match(itemLink, "item:(%d+)")
+        tsmItemString = "i:" .. itemID
+        if isGear then
+            tsmItemString = tsmItemString .. "::i" .. itemLevel
+        end
+    elseif type(idOrLink) == 'number' then
+        local itemID = idOrLink
+        tsmItemString = "i:" .. itemID
+    end
+    local tsmItemLink = TSM_API.GetItemLink(tsmItemString)
+    return tsmItemString, tsmItemLink
+end
+
 function CraftSimTSM:GetItemSaleRate(itemLink)
     local key = "dbregionsalerate*1000" -- because 0.x will be rounded down to 0 and resolves to nil
     local tsmItemString = TSM_API.ToItemString(itemLink)
@@ -350,10 +374,25 @@ end
 -- ---------------------------------------------------------------------------
 -- CraftSimTSM: Smart Restock
 -- ---------------------------------------------------------------------------
+--- owned  = total inventory across player, AH, and optionally alts + warbank
+--- @param tsmItemString string
+--- @return number owned
+function CraftSimTSM:GetOwned(tsmItemString)
+    -- Owned inventory via TSM_API
+    local numPlayer, numAlts, numAuctions, numAltAuctions = TSM_API.GetPlayerTotals(tsmItemString)
+    local owned = numPlayer + numAuctions
 
+    if CraftSim.DB.OPTIONS:Get("TSM_SMART_RESTOCK_INCLUDE_ALTS") then
+        owned = owned + numAlts + numAltAuctions
+    end
+
+    if CraftSim.DB.OPTIONS:Get("TSM_SMART_RESTOCK_INCLUDE_WARBANK") then
+        owned = owned + (TSM_API.GetWarbankQuantity and TSM_API.GetWarbankQuantity(tsmItemString) or 0)
+    end
+    return owned
+end
 --- Compute the net quantity still needed for a recipe's result item.
 --- target = value of the TSM restock expression for this item
---- owned  = total inventory across player, AH, and optionally alts + warbank
 --- needed = max(0, target - owned)
 ---@param recipeData CraftSim.RecipeData
 ---@return number needed  items still required (≥ 0)
@@ -380,18 +419,7 @@ function CraftSimTSM:GetSmartRestockAmount(recipeData)
     local restockExpr = CraftSim.DB.OPTIONS:Get("TSM_RESTOCK_KEY_ITEMS")
     local target = TSM_API.GetCustomPriceValue(restockExpr, tsmStr) or 0
 
-    -- Owned inventory via TSM_API
-    local numPlayer, numAlts, numAuctions, numAltAuctions = TSM_API.GetPlayerTotals(tsmStr)
-    local owned = numPlayer + numAuctions
-
-    if CraftSim.DB.OPTIONS:Get("TSM_SMART_RESTOCK_INCLUDE_ALTS") then
-        owned = owned + numAlts + numAltAuctions
-    end
-
-    if CraftSim.DB.OPTIONS:Get("TSM_SMART_RESTOCK_INCLUDE_WARBANK") then
-        owned = owned + (TSM_API.GetWarbankQuantity and TSM_API.GetWarbankQuantity(tsmStr) or 0)
-    end
-
+    local owned = CraftSimTSM:GetOwned(tsmStr)
     local needed = math.max(0, target - owned)
     return needed, target, owned
 end
