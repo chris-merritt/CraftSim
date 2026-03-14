@@ -205,7 +205,7 @@ function CraftSim.PriceData:Update()
                 -- Grey/junk items cannot be sold on the AH; use vendor sell price directly.
                 itemPrice = CraftSim.UTIL:GetVendorSellPriceByItemID(itemID)
             elseif self.recipeData.isGear then
-                itemPrice = CraftSim.PRICE_SOURCE:GetMinBuyoutByItemLink(item:GetItemLink())
+                itemPrice = CraftSimAUCTIONATOR:GetMinBuyoutByItemLink(item:GetItemLink())
             else
                 itemPrice = CraftSim.PRICE_SOURCE:GetMinBuyoutByItemID(itemID)
             end
