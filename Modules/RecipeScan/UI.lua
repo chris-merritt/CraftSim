@@ -1279,39 +1279,36 @@ function CraftSim.RECIPE_SCAN.UI:AddRecipe(row, recipeData)
                 topGearColumn.equippedText:SetIrrelevant()
             end
 
-            -- for inventory count, count all result items together? For now.. Maybe a user will have a better idea!
-
             local totalCountInv = 0
             local totalCountAH = nil
             local tsmNumInv = 0
-            for _, resultItem in pairs(recipeData.resultData.itemsByQuality) do
-                -- links are already loaded here
-                totalCountInv = totalCountInv + C_Item.GetItemCount(resultItem:GetItemLink(), true, false, true)
-                local countAH = CraftSim.PRICE_SOURCE:GetAuctionAmount(resultItem:GetItemLink())
-
-                if countAH then
-                    totalCountAH = (totalCountAH or 0) + countAH
-                end
-
+            local countText
+            local resultItem = recipeData.resultData.expectedItem or 0
+--            for _, resultItem in pairs(recipeData.resultData.itemsByQuality) do
                 -- include tsm num inventory if tsm enabled
                 if TSM_API then
-                    local tsmItemString = TSM_API.ToItemString(resultItem:GetItemLink())
-                    tsmNumInv = TSM_API.GetCustomPriceValue("NumInventory", tsmItemString)
+                    local tsmItemString, tsmItemLink = CraftSimTSM:GetTSMItemString(resultItem:GetItemLink(), recipeData.isGear)
+                    totalCountAH = CraftSimTSM:GetAuctionAmountByItemLink(tsmItemLink)
+                    tsmNumInv = CraftSimTSM:GetOwned(tsmItemString) - totalCountAH
                     if not tsmNumInv then
                         tsmNumInv = 0
                     end
+                    countText = tsmNumInv .. " / " .. totalCountAH
+                else
+                    -- links are already loaded here
+                    totalCountInv = totalCountInv + C_Item.GetItemCount(resultItem:GetItemLink(), true, false, true)
+                    local countAH = CraftSim.PRICE_SOURCE:GetAuctionAmount(resultItem:GetItemLink())
+
+                    if countAH then
+                        totalCountAH = (totalCountAH or 0) + countAH
+                    end
+                    countText = tostring(totalCountInv)
+
+                    if totalCountAH then
+                    countText = countText .. " / " .. totalCountAH
                 end
-            end
-
-            local countText = tostring(totalCountInv)
-
-            if totalCountAH then
-                countText = countText .. " / " .. totalCountAH
-            end
-
-            if TSM_API then
-                countText = countText .. " / " .. tsmNumInv
-            end
+--            end
+        end
 
             countColumn.text:SetText(countText)
 
