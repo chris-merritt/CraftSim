@@ -196,9 +196,7 @@ function CraftSimTSM:GetTSMItemString(idOrLink, isGear)
     if not idOrLink then
         return
     elseif  type(idOrLink) == 'string' then
-        DLAPI.DebugLog("CraftSim", "idOrLink: "..idOrLink)
         local itemLink = idOrLink
-        DLAPI.DebugLog("CraftSim", "itemLink: "..gsub(itemLink,"|","||"))
         local _, _, _, itemLevel = C_Item.GetItemInfo(itemLink)
         local itemID = string.match(itemLink, "item:(%d+)")
         tsmItemString = "i:" .. itemID

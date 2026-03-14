@@ -165,8 +165,6 @@ function CraftSim.PRICE_DETAILS.UI:UpdateDisplay(recipeData, exportMode)
 
                 local itemLink = resultItem:GetItemLink()
                 local tsmItemString, tsmItemLink = CraftSimTSM:GetTSMItemString(itemLink, recipeData.isGear)
-                DLAPI.DebugLog("CraftSim", tsmItemString)
-                DLAPI.DebugLog("CraftSim", tsmItemLink)
                 itemColumn.icon:SetItem(tsmItemLink)
                 local priceOverride = CraftSim.DB.PRICE_OVERRIDE:GetResultOverridePrice(recipeData.recipeID, qualityID)
                 local price
