@@ -164,13 +164,16 @@ function CraftSim.PRICE_DETAILS.UI:UpdateDisplay(recipeData, exportMode)
                 local profitColumn = row.columns[4]
 
                 local itemLink = resultItem:GetItemLink()
-                itemColumn.icon:SetItem(resultItem)
+                local tsmItemString, tsmItemLink = CraftSimTSM:GetTSMItemString(itemLink, recipeData.isGear)
+                DLAPI.DebugLog("CraftSim", tsmItemString)
+                DLAPI.DebugLog("CraftSim", tsmItemLink)
+                itemColumn.icon:SetItem(tsmItemLink)
                 local priceOverride = CraftSim.DB.PRICE_OVERRIDE:GetResultOverridePrice(recipeData.recipeID, qualityID)
                 local price
                 if recipeData.isGear then
                     price = priceOverride or CraftSimAUCTIONATOR:GetMinBuyoutByItemLink(itemLink) or 0
                 else
-                    price = priceOverride or CraftSim.PRICE_SOURCE:GetMinBuyoutByItemLink(itemLink) or 0
+                    price = priceOverride or CraftSimTSM:GetMinBuyoutByTSMItemString(tsmItemString) or 0
                 end
 
                 local profit = (price * CraftSim.CONST.AUCTION_HOUSE_CUT) -
@@ -179,8 +182,9 @@ function CraftSim.PRICE_DETAILS.UI:UpdateDisplay(recipeData, exportMode)
                     ((priceOverride and CraftSim.GUTIL:ColorizeText(" (OR)", CraftSim.GUTIL.COLORS.LEGENDARY)) or ""))
                 profitColumn.text:SetText(CraftSim.UTIL:FormatMoney(profit, true))
 
-                local itemCount = C_Item.GetItemCount(itemLink, true, false, true)
-                local ahCount = CraftSim.PRICE_SOURCE:GetAuctionAmount(itemLink)
+                local ahCount = CraftSimTSM:GetAuctionAmountByItemLink(tsmItemLink)
+                local itemCount = CraftSimTSM:GetOwned(tsmItemString) - ahCount
+                
 
                 if ahCount then
                     invColumn.text:SetText((itemCount or 0) .. "/" .. ahCount)
