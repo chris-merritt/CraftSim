@@ -137,6 +137,9 @@ function CraftSimTSM:GetAuctionAmountByItemID(itemID)
 end
 
 function CraftSimTSM:GetAuctionAmountByItemLink(itemLink)
+    if not itemLink then
+        return
+    end
     return TSM_API.GetAuctionQuantity(TSM_API.ToItemString(itemLink))
 end
 
@@ -158,6 +161,9 @@ function CraftSimTSM:GetMinBuyoutByItemID(itemID, isReagent)
 end
 
 function CraftSimTSM:GetMinBuyoutByTSMItemString(tsmItemString, isReagent)
+    if not tsmItemString then
+        return
+    end
     local minBuyoutPriceSourceKey = nil
     if isReagent then
         minBuyoutPriceSourceKey = CraftSim.DB.OPTIONS:Get(CraftSim.CONST.GENERAL_OPTIONS.TSM_PRICE_KEY_REAGENTS)
@@ -200,7 +206,7 @@ function CraftSimTSM:GetTSMItemString(idOrLink, isGear)
         local _, _, _, itemLevel = C_Item.GetItemInfo(itemLink)
         local itemID = string.match(itemLink, "item:(%d+)")
         tsmItemString = "i:" .. itemID
-        if isGear then
+        if isGear and tsmItemString then
             tsmItemString = tsmItemString .. "::i" .. itemLevel
         end
     elseif type(idOrLink) == 'number' then
@@ -374,8 +380,11 @@ end
 -- ---------------------------------------------------------------------------
 --- owned  = total inventory across player, AH, and optionally alts + warbank
 --- @param tsmItemString string
---- @return number owned
+--- @return number? owned
 function CraftSimTSM:GetOwned(tsmItemString)
+    if not tsmItemString then
+        return
+    end
     -- Owned inventory via TSM_API
     local numPlayer, numAlts, numAuctions, numAltAuctions = TSM_API.GetPlayerTotals(tsmItemString)
     local owned = numPlayer + numAuctions
