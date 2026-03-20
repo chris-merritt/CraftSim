@@ -206,7 +206,7 @@ function CraftSimTSM:GetTSMItemString(idOrLink, isGear)
         local _, _, _, itemLevel = C_Item.GetItemInfo(itemLink)
         local itemID = string.match(itemLink, "item:(%d+)")
         tsmItemString = "i:" .. itemID
-        if isGear and tsmItemString then
+        if isGear and tsmItemString and itemLevel then
             tsmItemString = tsmItemString .. "::i" .. itemLevel
         end
     elseif type(idOrLink) == 'number' then
