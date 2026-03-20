@@ -23,7 +23,7 @@ function CraftSim.ReagentItem:new(originalItemID, qualityID, currencyID)
     self.currencyID = currencyID
     --- how much of that reagentItem has been allocated for this recipe
     self.quantity = 0
-    self.item = Item:CreateFromItemID(itemID)
+    if itemID then self.item = Item:CreateFromItemID(itemID) end
     if alternativeItemID then
         self.originalItem = Item:CreateFromItemID(originalItemID)
     end
