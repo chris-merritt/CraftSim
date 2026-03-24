@@ -381,6 +381,8 @@ end
 --- owned  = total inventory across player, AH, and optionally alts + warbank
 --- @param tsmItemString string
 --- @return number? owned
+--- @return number? inventory
+--- @return number? auctionAmount
 function CraftSimTSM:GetOwned(tsmItemString)
     if not tsmItemString then
         return
@@ -388,15 +390,18 @@ function CraftSimTSM:GetOwned(tsmItemString)
     -- Owned inventory via TSM_API
     local numPlayer, numAlts, numAuctions, numAltAuctions = TSM_API.GetPlayerTotals(tsmItemString)
     local owned = numPlayer + numAuctions
+    local auctionAmount = numAuctions
+    local inventory = numPlayer
 
     if CraftSim.DB.OPTIONS:Get("TSM_SMART_RESTOCK_INCLUDE_ALTS") then
         owned = owned + numAlts + numAltAuctions
+        auctionAmount = auctionAmount + numAltAuctions
     end
 
     if CraftSim.DB.OPTIONS:Get("TSM_SMART_RESTOCK_INCLUDE_WARBANK") then
         owned = owned + (TSM_API.GetWarbankQuantity and TSM_API.GetWarbankQuantity(tsmItemString) or 0)
     end
-    return owned
+    return owned, inventory, auctionAmount
 end
 --- Compute the net quantity still needed for a recipe's result item.
 --- target = value of the TSM restock expression for this item
