@@ -1814,11 +1814,13 @@ function CraftSim.CRAFTQ.UI:UpdateQuickAccessBarDisplay()
                         local upcraftItemLink = upcraftItem:GetItemLink()
                         local missingDiff = 5 - itemCountPre
                         local missingText = itemCountPre >= 5 and "" or f.r("\nMissing " .. missingDiff .. "x " .. reagentItemLink)
+                    if reagentItemLink and upcraftItemLink then
                         macroButton.tooltipOptions = {
                             anchor = "ANCHOR_CURSOR_RIGHT",
                             text = f.bb("Convert 5x ") .. reagentItemLink .. "  -> " .. upcraftItemLink .. missingText
                         }
-                    end)
+                    end
+                end)
             end)
         end)
     end
@@ -1846,6 +1848,7 @@ function CraftSim.CRAFTQ.UI:UpdateQuickAccessBarDisplay()
                 recipeData:Update()
                 local buffActive = recipeData.buffData:IsBuffActive(CraftSim.CONST.BUFF_IDS.SHATTERING_ESSENCE_MIDNIGHT)
 
+                if not activeReagent then return end
                 activeReagent:ContinueOnItemLoad(function()
 
                     if buffActive then
