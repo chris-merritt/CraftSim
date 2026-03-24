@@ -1335,8 +1335,11 @@ function CraftSim.RECIPE_SCAN:SendToCraftQueue()
                     tsmItemString) or 0
             -- TSM Enhanced: subtract existing inventory from restock target
                 if CraftSimTSM:IsAvailable() and CraftSim.DB.OPTIONS:Get("TSM_SMART_RESTOCK_ENABLED") then
-                    local owned = CraftSimTSM:GetOwned(tsmItemString)
+                    local owned, inventory = CraftSimTSM:GetOwned(tsmItemString)
                     restockAmount = restockAmount - owned
+                    if inventory > 0 then
+                        restockAmount = 0
+                    end
                 end
             end
 
