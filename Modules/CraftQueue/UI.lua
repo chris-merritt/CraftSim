@@ -1812,6 +1812,7 @@ function CraftSim.CRAFTQ.UI:UpdateQuickAccessBarDisplay()
                 GUTIL:ContinueOnAllItemsLoaded(items, function()
                         local reagentItemLink = reagentItem:GetItemLink()
                         local upcraftItemLink = upcraftItem:GetItemLink()
+                        if not reagentItemLink then return end
                         local missingDiff = 5 - itemCountPre
                         local missingText = itemCountPre >= 5 and "" or f.r("\nMissing " .. missingDiff .. "x " .. reagentItemLink)
                     if reagentItemLink and upcraftItemLink then

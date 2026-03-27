@@ -218,6 +218,7 @@ function CraftSimTSM:GetTSMItemString(idOrLink, isGear)
 end
 
 function CraftSimTSM:GetItemSaleRate(itemLink)
+    if not itemLink then return end
     local key = "dbregionsalerate*1000" -- because 0.x will be rounded down to 0 and resolves to nil
     local tsmItemString = TSM_API.ToItemString(itemLink)
     local salerate, error = TSM_API.GetCustomPriceValue(key, tsmItemString)
