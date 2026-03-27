@@ -3262,6 +3262,7 @@ function CraftSim.CRAFTQ.UI:UpdateQuickAccessBarDisplay()
                 GUTIL:ContinueOnAllItemsLoaded(items, function()
                     local reagentItemLink = reagentItem:GetItemLink() or "Unknown Item"
                     local upcraftItemLink = upcraftItem:GetItemLink() or "Unknown Item"
+                        if not reagentItemLink then return end
                     local missingDiff = 5 - itemCountPre
                     local missingText = missingDiff <= 0 and "" or
                         f.r("\nMissing " .. missingDiff .. "x " .. reagentItemLink)
