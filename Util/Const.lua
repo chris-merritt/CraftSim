@@ -334,6 +334,7 @@ CraftSim.CONST.GENERAL_OPTIONS = {
     -- RECIPE SCAN
     RECIPESCAN_INCLUDE_SOULBOUND = "RECIPESCAN_INCLUDE_SOULBOUND",
     RECIPESCAN_INCLUDE_GEAR = "RECIPESCAN_INCLUDE_GEAR",
+    RECIPESCAN_INCLUDE_HOUSING = "RECIPESCAN_INCLUDE_HOUSING",
     RECIPESCAN_INCLUDE_NOT_LEARNED = "RECIPESCAN_INCLUDE_NOT_LEARNED",
     RECIPESCAN_ONLY_FAVORITES = "RECIPESCAN_ONLY_FAVORITES",
     RECIPESCAN_OPTIMIZE_PROFESSION_TOOLS = "RECIPESCAN_OPTIMIZE_PROFESSION_TOOLS",
@@ -1259,4 +1260,19 @@ CraftSim.CONST.PRE_CRAFT_BUFF_GATE_ID = {
     MIDNIGHT_ENCHANT_SHATTER = "midnight_enchant_shatter",
     TWW_ENCHANT_SHATTER = "tww_enchant_shatter",
     TWW_BLACKSMITH_EVERBURNING = "tww_blacksmith_everburning",
+}
+
+CraftSim.CONST.LUMBER_IDS = {
+["Fel-Touched Lumber"] = 251767,
+["Olemba Lumber"] = 242691,
+["Bamboo Lumber"] = 251763,
+["Dornic Fir Lumber"] = 248012,
+["Thalassian Lumber"] = 256963,
+["Dragonpine Lumber"] = 251773,
+["Ironwood Lumber"] = 245586,
+["Ashwood Lumber"] = 251764,
+["Shadowmoon Lumber"] = 251766,
+["Coldwind Lumber"] = 251762,
+["Arden Lumber"] = 251772,
+["Darkpine Lumber"] = 251768,
 }

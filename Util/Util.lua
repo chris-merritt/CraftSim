@@ -965,3 +965,19 @@ function CraftSim.UTIL:MoveItemIntoInventory(itemInfo, maxCount)
         }:Continue()
     end)
 end
+
+---@param recipeID number
+---@return boolean
+function CraftSim.UTIL:IsHousing(recipeID)
+local lumber = CraftSim.CONST.LUMBER_IDS
+local isHousing = false
+local schematic = C_TradeSkillUI.GetRecipeSchematic(recipeID, false)
+    for _, slot in ipairs(schematic.reagentSlotSchematics) do
+        if slot.required then
+            for _, reagentItem in ipairs(slot.reagents) do
+            if tContains(lumber,reagentItem.itemID) then isHousing = true end
+            end
+        end
+    end
+    return isHousing
+end

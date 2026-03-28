@@ -447,6 +447,7 @@ function CraftSim.LOCAL_EN:GetData()
         RECIPE_SCAN_INCLUDE_SOULBOUND_ITEMS = "Include " .. f.e("Soulbound") .. " Items",
         RECIPE_SCAN_INCLUDE_UNLEARNED_RECIPES = "Include " .. f.r("Unlearned") .. " Recipes",
         RECIPE_SCAN_INCLUDE_GEAR_LABEL = "Include Gear",
+        RECIPE_SCAN_INCLUDE_HOUSING_LABEL = "Include Housing",
         RECIPE_SCAN_REAGENT_ALLOCATION = "Reagent Allocation",
         RECIPE_SCAN_REAGENT_ALLOCATION_Q1 = "All Q1",
         RECIPE_SCAN_REAGENT_ALLOCATION_Q2 = "All Q2",
