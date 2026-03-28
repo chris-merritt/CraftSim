@@ -657,13 +657,17 @@ function CraftSim.RECIPE_SCAN:SendToCraftQueue()
                 local tsmItemString = CraftSimTSM:GetTSMItemString(recipeData.resultData.expectedItem:GetItemLink(), recipeData.isGear)
                 restockAmount = TSM_API.GetCustomPriceValue(CraftSim.DB.OPTIONS:Get("TSM_RESTOCK_KEY_ITEMS"),
                     tsmItemString) or 0
-            end
+            
 
             -- TSM Enhanced: subtract existing inventory from restock target
             if CraftSimTSM:IsAvailable() and CraftSim.DB.OPTIONS:Get("TSM_SMART_RESTOCK_ENABLED") then
-                local _, _, owned = CraftSimTSM:GetSmartRestockAmount(recipeData)
-                restockAmount = math.max(0, restockAmount - owned)
+                local owned, inventory = CraftSimTSM:GetOwned(tsmItemString)
+                restockAmount = restockAmount - owned
+                if inventory > 0 then
+                    restockAmount = 0
+                end
             end
+        end
 
             if recipeData.baseItemAmount > 1 then
                 restockAmount = math.floor(restockAmount / recipeData.baseItemAmount)
