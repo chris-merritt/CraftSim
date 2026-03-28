@@ -136,6 +136,8 @@ function CraftSim.DB.OPTIONS.MIGRATION:M_0_1_Import_from_CraftSimRecipeDataCache
                 .recipeScanIncludeSoulbound
             CraftSimDB.optionsDB.data[CraftSim.CONST.GENERAL_OPTIONS.RECIPESCAN_INCLUDE_GEAR] = CraftSimOptions
                 .recipeScanIncludeGear
+            CraftSimDB.optionsDB.data[CraftSim.CONST.GENERAL_OPTIONS.RECIPESCAN_INCLUDE_HOUSING] = CraftSimOptions
+                .recipeScanIncludeHousing
             CraftSimDB.optionsDB.data[CraftSim.CONST.GENERAL_OPTIONS.RECIPESCAN_INCLUDE_NOT_LEARNED] = CraftSimOptions
                 .recipeScanIncludeNotLearned
             CraftSimDB.optionsDB.data[CraftSim.CONST.GENERAL_OPTIONS.RECIPESCAN_ONLY_FAVORITES] = CraftSimOptions

@@ -175,6 +175,15 @@ function CraftSim.RECIPE_SCAN.FilterRecipeInfo(crafterUID, recipeInfo)
         return false
     end
 
+    local isHousing = CraftSim.UTIL:IsHousing(recipeInfo.recipeID)
+
+    if isHousing then
+        if CraftSim.DB.OPTIONS:Get("RECIPESCAN_INCLUDE_HOUSING") then
+            return true
+        else
+            return false
+        end
+    end
 
     -- if recipe does not have any profession info, exclude recipe
     -- it seems some pandaren recipes may not have this info such as C_TradeSkillUI.GetProfessionInfoByRecipeID(381364)

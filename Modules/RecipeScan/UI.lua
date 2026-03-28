@@ -574,6 +574,15 @@ function CraftSim.RECIPE_SCAN.UI:CreateProfessionTabContent(row, content)
                         CraftSim.DB.OPTIONS:Save("RECIPESCAN_INCLUDE_GEAR", not value)
                     end)
 
+                rootDescription:CreateCheckbox(
+                    L("RECIPE_SCAN_INCLUDE_HOUSING_LABEL"),
+                    function()
+                        return CraftSim.DB.OPTIONS:Get("RECIPESCAN_INCLUDE_HOUSING")
+                    end, function()
+                        local value = CraftSim.DB.OPTIONS:Get("RECIPESCAN_INCLUDE_HOUSING")
+                        CraftSim.DB.OPTIONS:Save("RECIPESCAN_INCLUDE_HOUSING", not value)
+                    end)
+
                 rootDescription:CreateDivider()
 
                 local includeExpansions = rootDescription:CreateButton(L("RECIPE_SCAN_EXPANSION_FILTER_BUTTON"))
