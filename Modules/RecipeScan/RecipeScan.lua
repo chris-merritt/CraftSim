@@ -673,8 +673,8 @@ function CraftSim.RECIPE_SCAN:SendToCraftQueue()
                 recipeData:Update()
             end
 
-            if TSM_API and recipeData.resultData.expectedItem then
-                local saleRateThreshold = CraftSim.DB.OPTIONS:Get("RECIPESCAN_SEND_TO_CRAFTQUEUE_TSM_SALERATE_THRESHOLD")
+            local saleRateThreshold = CraftSim.DB.OPTIONS:Get("RECIPESCAN_SEND_TO_CRAFTQUEUE_TSM_SALERATE_THRESHOLD")
+            if saleRateThreshold > 0 and TSM_API and recipeData.resultData.expectedItem then
                 local resultSaleRate = CraftSimTSM:GetItemSaleRate(recipeData.resultData.expectedItem:GetItemLink())
 
                 if resultSaleRate < saleRateThreshold then
