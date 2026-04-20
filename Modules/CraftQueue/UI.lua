@@ -3486,11 +3486,21 @@ function CraftSim.CRAFTQ.UI:UpdateCraftQueueTotalProfitDisplay()
     queueTab.content.totalCraftingCosts:SetText(f.r(CraftSim.UTIL:FormatMoney(totalCraftingCosts)))
 end
 
+local lastRun = 0
+local throttleDelay = 1 -- Only run every 1 second
+
 function CraftSim.CRAFTQ.UI:UpdateDisplay()
-    CraftSim.CRAFTQ.UI:UpdateQuickAccessBarDisplay()
-    CraftSim.CRAFTQ.UI:UpdateQueueDisplay()
-    CraftSim.CRAFTQ.UI:UpdateCraftListsDisplay()
-    CraftSim.CRAFTQ.UI:UpdateCraftListsRecipeDisplay()
+    local now = GetTime()
+    if now > lastRun + (throttleDelay * 3) then
+            lastRun = now
+        CraftSim.CRAFTQ.UI:UpdateQuickAccessBarDisplay()
+    end
+    if now > lastRun + (throttleDelay / 3) then
+            lastRun = now
+        CraftSim.CRAFTQ.UI:UpdateQueueDisplay()
+        CraftSim.CRAFTQ.UI:UpdateCraftListsDisplay()
+        CraftSim.CRAFTQ.UI:UpdateCraftListsRecipeDisplay()
+    end
 end
 
 ---@param craftQueueItem CraftSim.CraftQueueItem
