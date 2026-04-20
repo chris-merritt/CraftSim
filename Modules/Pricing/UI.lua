@@ -588,11 +588,12 @@ function CraftSim.PRICING.UI:UpdateResultItemsList(recipeData, costOptimizationF
                 local priceColumn = row.columns[3]
                 local avgCostColumn = row.columns[4]
 
+                local tsmItemString = recipeData.resultData.itemsByQualityTSM[qualityID]
                 local itemLink = resultItem:GetItemLink()
-                itemColumn.icon:SetItem(resultItem)
+                itemColumn.icon:SetItem(TSM_API.GetItemLink(tsmItemString), {overrideQuality = qualityID})
 
                 local priceOverride = CraftSim.DB.PRICE_OVERRIDE:GetResultOverridePrice(recipeData.recipeID, qualityID)
-                local price = priceOverride or CraftSim.PRICE_SOURCE:GetMinBuyoutByItemLink(itemLink)
+                local price = priceOverride or CraftSimTSM:GetMinBuyoutByTSMItemString(tsmItemString)
 
                 priceColumn.text:SetText(CraftSim.UTIL:FormatMoney(price) ..
                     ((priceOverride and f.l(" (OR)")) or ""))
@@ -602,8 +603,8 @@ function CraftSim.PRICING.UI:UpdateResultItemsList(recipeData, costOptimizationF
                 local avgCraftingCostPerItem = avgCraftingCost / averageYield
                 avgCostColumn.text:SetText(CraftSim.UTIL:FormatMoney(avgCraftingCostPerItem))
 
-                local itemCount = C_Item.GetItemCount(itemLink, true, false, true) or 0
-                local ahCount = CraftSim.PRICE_SOURCE:GetAuctionAmount(itemLink) or 0
+                local owned, _, ahCount = CraftSimTSM:GetOwned(tsmItemString)
+                local itemCount = owned - ahCount
 
                 if ahCount > 0 then
                     invColumn.text:SetText(itemCount .. "/" .. ahCount)

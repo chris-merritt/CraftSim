@@ -197,7 +197,9 @@ end
 
 ---@param idOrLink number | string
 ---@param isGear boolean?
-function CraftSimTSM:GetTSMItemString(idOrLink, isGear)
+---@param baseItemLevel integer?
+---@param bonusItemLevel integer?
+function CraftSimTSM:GetTSMItemString(idOrLink, isGear, baseItemLevel, bonusItemLevel)
     local tsmItemString
     if not idOrLink then
         return
@@ -212,6 +214,11 @@ function CraftSimTSM:GetTSMItemString(idOrLink, isGear)
     elseif type(idOrLink) == 'number' then
         local itemID = idOrLink
         tsmItemString = "i:" .. itemID
+        if isGear and baseItemLevel and baseItemLevel > 0 then
+            local bonus = bonusItemLevel or 0
+            local itemLevel = baseItemLevel + bonus
+            tsmItemString = tsmItemString.."::i"..itemLevel
+        end
     end
     local tsmItemLink = TSM_API.GetItemLink(tsmItemString)
     return tsmItemString, tsmItemLink

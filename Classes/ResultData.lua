@@ -86,6 +86,24 @@ function CraftSim.ResultData:UpdatePossibleResultItems()
         end
     end
 
+    if CraftSimTSM:IsAvailable() then
+        local baseItemLevel = nil
+        local addItemLevels = nil
+        if recipeData.recipeInfo.qualityIlvlBonuses then
+            addItemLevels = recipeData.recipeInfo.qualityIlvlBonuses
+        end
+        self.itemsByQualityTSM = {}
+        for quality, item in ipairs(self.itemsByQuality) do
+            local itemID = item:GetItemID()
+            local bonusItemLevel = nil
+            baseItemLevel = recipeData.recipeInfo.itemLevel or 0
+            if addItemLevels then
+            bonusItemLevel = addItemLevels[quality]
+            end
+            self.itemsByQualityTSM[quality] = CraftSimTSM:GetTSMItemString(itemID, recipeData.isGear, baseItemLevel, bonusItemLevel)
+        end
+    end
+
     local crafterUID = recipeData:GetCrafterUID()
     if recipeData.learned then
         for qualityID, item in ipairs(self.itemsByQuality) do
@@ -161,6 +179,8 @@ function CraftSim.ResultData:Update()
         self.expectedQualityConcentration = 1
         self.expectedItem = self.itemsByQuality[1]
         self.expectedItemConcentration = self.expectedItem
+        self.expectedItemStringTSM = self.itemsByQualityTSM[1]
+        self.expectedItemStringConcentrationTSM = self.expectedItemStringTSM
         return
     end
 
@@ -175,6 +195,8 @@ function CraftSim.ResultData:Update()
 
     self.expectedItem = self.itemsByQuality[self.expectedQuality]
     self.expectedItemConcentration = self.itemsByQuality[self.expectedQualityConcentration]
+    self.expectedItemStringTSM = self.itemsByQualityTSM[self.expectedQuality]
+    self.expectedItemStringConcentrationTSM = self.itemsByQualityTSM[self.expectedQualityConcentration]
 end
 
 --- returns the expected number of crafts to craft a given amount of items
