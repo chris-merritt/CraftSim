@@ -39,10 +39,11 @@ end
 --- Profession id for the open Professions UI. Prefer GetChildProfessionInfo (crafting tab); fall back to
 --- ProfessionsFrame.professionInfo (e.g. orders tab) so work-order actions still resolve a profession.
 ---@return number? profession
+---@return number? professionSkillLineID
 function CraftSim.UTIL:GetProfessionsFrameProfession()
     local child = C_TradeSkillUI.GetChildProfessionInfo()
     if child and child.profession then
-        return child.profession
+        return child.profession, child.professionID
     end
     if ProfessionsFrame and ProfessionsFrame.professionInfo and ProfessionsFrame.professionInfo.profession then
         return ProfessionsFrame.professionInfo.profession
