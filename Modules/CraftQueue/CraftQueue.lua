@@ -227,9 +227,15 @@ function CraftSim.CRAFTQ:CRAFTINGORDERS_CLAIMED_ORDER_REMOVED()
 end
 
 function CraftSim.CRAFTQ:QueueWorkOrders()
-    local print = CraftSim.DEBUG:RegisterDebugID("Modules.CraftQueue.QueueWorkOrders")
-    print("QueueWorkOrders", false, true)
-    local profession = CraftSim.UTIL:GetProfessionsFrameProfession()
+    local profession, startSkillLineID = CraftSim.UTIL:GetProfessionsFrameProfession()
+    
+    local npcSkillLineIDs = {}
+    if CraftSim.DB.OPTIONS:Get("CRAFTQUEUE_WORK_ORDERS_INCLUDE_PATRON_TWW") then tinsert(npcSkillLineIDs, CraftSim.CONST.TRADESKILLLINEIDS[profession][CraftSim.CONST.EXPANSION_IDS.THE_WAR_WITHIN]) end
+    if CraftSim.DB.OPTIONS:Get("CRAFTQUEUE_WORK_ORDERS_INCLUDE_PATRON_MIDNIGHT") then tinsert(npcSkillLineIDs, CraftSim.CONST.TRADESKILLLINEIDS[profession][CraftSim.CONST.EXPANSION_IDS.MIDNIGHT]) end
+    if not npcSkillLineIDs[startSkillLineID] then tinsert(npcSkillLineIDs, startSkillLineID) end
+
+    CraftSim.CRAFTQ.queuingWorkOrders = true
+    --Logger:LogDebug("QueueWorkOrders", false, true)
     if not profession or not CraftSim.UTIL:ShouldEnableCraftQueueAddWorkOrdersButton() then
         return
     end
@@ -254,291 +260,314 @@ function CraftSim.CRAFTQ:QueueWorkOrders()
     queueWorkOrdersButton:SetEnabled(false)
 
     GUTIL.FrameDistributor {
-        iterationTable = workOrderTypes,
+        iterationTable = npcSkillLineIDs,
         iterationsPerFrame = 1,
-        maxIterations = 10,
+        maxIterations = 3,
         finally = function()
             queueWorkOrdersButton:SetText(L("CRAFT_QUEUE_ADD_WORK_ORDERS_BUTTON_LABEL"))
             queueWorkOrdersButton:SetEnabled(CraftSim.UTIL:ShouldEnableCraftQueueAddWorkOrdersButton())
+            CraftSim.CRAFTQ.queuingWorkOrders = false
+            self:CreateAutoShoppingListAfterQueue()
+            --Logger:LogDebug("Reset SkillLineId to : "..tostring(startSkillLineID))
+            C_TradeSkillUI.SetProfessionChildSkillLineID(startSkillLineID)
         end,
-        continue = function(frameDistributor, _, workOrderType, _, progress)
-            local orderType = workOrderType --[[@as Enum.CraftingOrderType]]
-            if not orderType then
-                frameDistributor:Continue()
-                return
-            end
-            local request = {
-                orderType = orderType,
-                searchFavorites = false,
-                initialNonPublicSearch = false,
-                primarySort = {
-                    sortType = Enum.CraftingOrderSortType.ItemName,
-                    reversed = false,
-                },
-                secondarySort = {
-                    sortType = Enum.CraftingOrderSortType.MaxTip,
-                    reversed = false,
-                },
-                forCrafter = true,
-                offset = 0,
-                profession = profession,
-                ---@diagnostic disable-next-line: redundant-parameter
-                callback = C_FunctionContainers.CreateCallback(function(result)
-                    if result == Enum.CraftingOrderResult.Ok then
-                        local orders = C_CraftingOrders.GetCrafterOrders()
-                        local claimedOrder = C_CraftingOrders.GetClaimedOrder()
-                        if claimedOrder then
-                            tinsert(orders, claimedOrder)
-                        end
-
-                        local isPublicOrder = orderType == Enum.CraftingOrderType.Public
-                        local publicOrderCandidates = {}
-
-                        GUTIL.FrameDistributor {
-                            iterationTable = orders,
-                            iterationsPerFrame = 1,
-                            maxIterations = 100,
-                            finally = function()
-                                if isPublicOrder and #publicOrderCandidates > 0 then
-                                    table.sort(publicOrderCandidates, function(a, b)
-                                        return a.averageProfit > b.averageProfit
-                                    end)
-                                    local maxCount = CraftSim.DB.OPTIONS:Get("CRAFTQUEUE_PUBLIC_ORDERS_MAX_COUNT")
-                                    if maxCount == 0 then
-                                        local claimInfo = C_CraftingOrders.GetOrderClaimInfo(profession)
-                                        maxCount = (claimInfo and claimInfo.claimsRemaining) or 0
-                                    end
-                                    for i = 1, math.min(maxCount, #publicOrderCandidates) do
-                                        CraftSim.CRAFTQ:AddRecipe { recipeData = publicOrderCandidates[i].recipeData }
-                                    end
+        continue = function(expansionDistributor, _, npcSkillLineID, _, progress)
+            C_TradeSkillUI.SetProfessionChildSkillLineID(npcSkillLineID)
+            --Logger:LogDebug("Switching SkillLineId to : "..tostring(npcSkillLineID))
+            GUTIL.FrameDistributor {
+                iterationTable = workOrderTypes,
+                iterationsPerFrame = 1,
+                maxIterations = 10,
+                finally = function()
+                    expansionDistributor:Continue()
+                end,
+                continue = function(frameDistributor, _, workOrderType, _, progress)
+                    local orderType = workOrderType --[[@as Enum.CraftingOrderType]]
+                    if not orderType then
+                        frameDistributor:Continue()
+                        return
+                    end
+                    -- only scan non-npc orders once
+                    if orderType ~= Enum.CraftingOrderType.Npc and npcSkillLineID ~= npcSkillLineIDs[#npcSkillLineIDs] then
+                        frameDistributor:Continue()
+                        return
+                    end
+                    local request = {
+                        orderType = orderType,
+                        searchFavorites = false,
+                        initialNonPublicSearch = false,
+                        primarySort = {
+                            sortType = Enum.CraftingOrderSortType.ItemName,
+                            reversed = false,
+                        },
+                        secondarySort = {
+                            sortType = Enum.CraftingOrderSortType.MaxTip,
+                            reversed = false,
+                        },
+                        forCrafter = true,
+                        offset = 0,
+                        profession = profession,
+                        ---@diagnostic disable-next-line: redundant-parameter
+                        callback = C_FunctionContainers.CreateCallback(function(result)
+                            if result == Enum.CraftingOrderResult.Ok then
+                                local orders = C_CraftingOrders.GetCrafterOrders()
+                                local claimedOrder = C_CraftingOrders.GetClaimedOrder()
+                                if claimedOrder then
+                                    tinsert(orders, claimedOrder)
                                 end
-                                frameDistributor:Continue()
-                            end,
-                            continue = function(distributor, _, order, _, progress)
-                                order = order --[[@as CraftingOrderInfo]]
-                                local orderTypeText = CraftSim.UTIL:GetOrderTypeText(orderType)
 
-                                queueWorkOrdersButton:SetText(string.format("%s - %.0f%%", orderTypeText, progress))
+                                local isPublicOrder = orderType == Enum.CraftingOrderType.Public
+                                local publicOrderCandidates = {}
 
-                                local isGuildOrder = order.orderType == Enum.CraftingOrderType.Guild
-                                local isPatronOrder = order.orderType == Enum.CraftingOrderType.Npc
-                                local knowledgePointsRewarded = 0
-
-                                if isGuildOrder then
-                                    if CraftSim.DB.OPTIONS:Get("CRAFTQUEUE_WORK_ORDERS_GUILD_ALTS_ONLY") then
-                                        -- check for alts.. consider that alts on same realm do not have the realm name in customerName
-                                        local cleanedCustomerName = gsub(order.customerName,
-                                            "-" .. realmName, "")
-                                        if not tContains(cleanedCrafterUIDs, cleanedCustomerName) then
-                                            distributor:Continue()
-                                            return
+                                GUTIL.FrameDistributor {
+                                    iterationTable = orders,
+                                    iterationsPerFrame = 1,
+                                    maxIterations = 100,
+                                    finally = function()
+                                        if isPublicOrder and #publicOrderCandidates > 0 then
+                                            table.sort(publicOrderCandidates, function(a, b)
+                                                return a.averageProfit > b.averageProfit
+                                            end)
+                                            local maxCount = CraftSim.DB.OPTIONS:Get("CRAFTQUEUE_PUBLIC_ORDERS_MAX_COUNT")
+                                            if maxCount == 0 then
+                                                local claimInfo = C_CraftingOrders.GetOrderClaimInfo(profession)
+                                                maxCount = (claimInfo and claimInfo.claimsRemaining) or 0
+                                            end
+                                            for i = 1, math.min(maxCount, #publicOrderCandidates) do
+                                                CraftSim.CRAFTQ:AddRecipe { recipeData = publicOrderCandidates[i].recipeData }
+                                            end
                                         end
-                                    end
-                                end
+                                        frameDistributor:Continue()
+                                    end,
+                                    continue = function(distributor, _, order, _, progress)
+                                        order = order --[[@as CraftingOrderInfo]]
+                                        local orderTypeText = CraftSim.UTIL:GetOrderTypeText(orderType)
 
-                                local recipeInfo = C_TradeSkillUI.GetRecipeInfo(order.spellID)
-                                if recipeInfo and recipeInfo.learned then
-                                    local recipeData = CraftSim.RecipeData({ recipeID = order.spellID })
+                                        queueWorkOrdersButton:SetText(string.format("%s - %.0f%%", orderTypeText, progress))
 
-                                    if not CraftSim.DB.OPTIONS:Get("CRAFTQUEUE_PATRON_ORDERS_SPARK_RECIPES") then
-                                        if recipeData:HasRequiredSelectableReagent() then
-                                            local slot = recipeData.reagentData.requiredSelectableReagentSlot
-                                            if slot and slot:IsPossibleReagent(CraftSim.CONST.ITEM_IDS
-                                                    .REQUIRED_SELECTABLE_ITEMS.SPARK_OF_OMENS) then
-                                                if slot:IsAllocated() and not slot:IsOrderReagentIn(recipeData) then
+                                        local isGuildOrder = order.orderType == Enum.CraftingOrderType.Guild
+                                        local isPatronOrder = order.orderType == Enum.CraftingOrderType.Npc
+                                        local knowledgePointsRewarded = 0
+
+                                        if isGuildOrder then
+                                            if CraftSim.DB.OPTIONS:Get("CRAFTQUEUE_WORK_ORDERS_GUILD_ALTS_ONLY") then
+                                                -- check for alts.. consider that alts on same realm do not have the realm name in customerName
+                                                local cleanedCustomerName = gsub(order.customerName,
+                                                    "-" .. realmName, "")
+                                                if not tContains(cleanedCrafterUIDs, cleanedCustomerName) then
                                                     distributor:Continue()
                                                     return
                                                 end
                                             end
                                         end
-                                    end
-                                    recipeData:SetOrder(order)
 
-                                    if recipeData.orderData and isPatronOrder then
-                                        local rewardAllowed = GUTIL:Every(recipeData.orderData.npcOrderRewards,
-                                            function(reward)
-                                                local acuityAllowed = CraftSim.DB.OPTIONS:Get(
-                                                    "CRAFTQUEUE_PATRON_ORDERS_ACUITY")
+                                        local recipeInfo = C_TradeSkillUI.GetRecipeInfo(order.spellID)
+                                        if recipeInfo and recipeInfo.learned then
+                                            local recipeData = CraftSim.RecipeData({ recipeID = order.spellID })
 
-                                                if reward.currencyType then
-                                                    local moxieContained = tContains(CraftSim.CONST.MOXIE_CURRENCY_IDS,
-                                                        reward.currencyType)
-                                                    if not acuityAllowed and moxieContained then
+                                            if not CraftSim.DB.OPTIONS:Get("CRAFTQUEUE_PATRON_ORDERS_SPARK_RECIPES") then
+                                                if recipeData:HasRequiredSelectableReagent() then
+                                                    local slot = recipeData.reagentData.requiredSelectableReagentSlot
+                                                    if slot and slot:IsPossibleReagent(CraftSim.CONST.ITEM_IDS
+                                                            .REQUIRED_SELECTABLE_ITEMS.SPARK_OF_OMENS) then
+                                                        if slot:IsAllocated() and not slot:IsOrderReagentIn(recipeData) then
+                                                            distributor:Continue()
+                                                            return
+                                                        end
+                                                    end
+                                                end
+                                            end
+
+                                            recipeData:SetOrder(order)
+
+                                            if recipeData.orderData and isPatronOrder then
+                                                local rewardAllowed = GUTIL:Every(recipeData.orderData.npcOrderRewards,
+                                                    function(reward)
+                                                        local acuityAllowed = CraftSim.DB.OPTIONS:Get(
+                                                            "CRAFTQUEUE_PATRON_ORDERS_ACUITY")
+
+                                                        if reward.currencyType then
+                                                            local moxieContained = tContains(CraftSim.CONST.MOXIE_CURRENCY_IDS,
+                                                                reward.currencyType)
+                                                            if not acuityAllowed and moxieContained then
+                                                                return false
+                                                            end
+
+                                                            return true
+                                                        end
+                                                        local itemID = GUTIL:GetItemIDByLink(reward.itemLink)
+                                                        local knowledgeAllowed = CraftSim.DB.OPTIONS:Get(
+                                                            "CRAFTQUEUE_PATRON_ORDERS_KNOWLEDGE_POINTS")
+                                                        local runeAllowed = CraftSim.DB.OPTIONS:Get(
+                                                            "CRAFTQUEUE_PATRON_ORDERS_POWER_RUNE")
+
+                                                        local knowledgeContained = false
+                                                        if tContains(
+                                                                CraftSim.CONST.PATRON_ORDERS_KNOWLEDGE_REWARD_ITEMS.WEEKLY,
+                                                                itemID) then
+                                                            knowledgePointsRewarded = 2
+                                                            knowledgeContained = true
+                                                        elseif tContains(
+                                                                CraftSim.CONST.PATRON_ORDERS_KNOWLEDGE_REWARD_ITEMS.CATCHUP,
+                                                                itemID) then
+                                                            knowledgePointsRewarded = 1
+                                                            knowledgeContained = true
+                                                        end
+                                                        local acuityContained = tContains(
+                                                            CraftSim.CONST.PATRON_ORDERS_ACUITY_REWARD_ITEMS, itemID)
+                                                        local runeContained = tContains(
+                                                            CraftSim.CONST.PATRON_ORDERS_POWER_RUNE_REWARD_ITEMS, itemID)
+                                                        if not acuityAllowed and acuityContained then
+                                                            return false
+                                                        end
+                                                        if not runeAllowed and runeContained then
+                                                            return false
+                                                        end
+                                                        if not knowledgeAllowed and knowledgeContained then
+                                                            return false
+                                                        end
+                                                        return true
+                                                    end)
+                                                if not rewardAllowed then
+                                                    distributor:Continue()
+                                                    return
+                                                end
+                                            end
+
+                                            --- KP max cost is gold willing to pay per point (patron filter), not profit.
+                                            --- Count recipe first-craft KP (1) with patron-listed KP rewards for that check.
+                                            local totalKpForCostCheck = knowledgePointsRewarded
+                                            if isPatronOrder and recipeInfo.firstCraft then
+                                                totalKpForCostCheck = totalKpForCostCheck + 1
+                                            end
+
+                                            recipeData:SetCheapestQualityReagentsMax() -- considers patron reagents
+                                            recipeData:Update()
+
+                                            --Logger:LogDebug("- Knowledge Points Rewarded: " .. tostring(knowledgePointsRewarded))
+
+
+                                            local function withinKPCost(averageProfit)
+                                                if isPatronOrder and totalKpForCostCheck > 0 and averageProfit < 0 then
+                                                    local kpCost = math.abs(averageProfit / totalKpForCostCheck)
+
+                                                    --Logger:LogDebug("- kpCost: " .. GUTIL:FormatMoney(kpCost, true, nil, true))
+
+                                                    if kpCost >= maxKPCost then
                                                         return false
                                                     end
-
                                                     return true
                                                 end
-                                                local itemID = GUTIL:GetItemIDByLink(reward.itemLink)
-                                                local knowledgeAllowed = CraftSim.DB.OPTIONS:Get(
-                                                    "CRAFTQUEUE_PATRON_ORDERS_KNOWLEDGE_POINTS")
-                                                local runeAllowed = CraftSim.DB.OPTIONS:Get(
-                                                    "CRAFTQUEUE_PATRON_ORDERS_POWER_RUNE")
+                                                return true
+                                            end
 
-                                                local knowledgeContained = false
-                                                if tContains(
-                                                        CraftSim.CONST.PATRON_ORDERS_KNOWLEDGE_REWARD_ITEMS.WEEKLY,
-                                                        itemID) then
-                                                    knowledgePointsRewarded = 2
-                                                    knowledgeContained = true
-                                                elseif tContains(
-                                                        CraftSim.CONST.PATRON_ORDERS_KNOWLEDGE_REWARD_ITEMS.CATCHUP,
-                                                        itemID) then
-                                                    knowledgePointsRewarded = 1
-                                                    knowledgeContained = true
-                                                end
-                                                local acuityContained = tContains(
-                                                    CraftSim.CONST.PATRON_ORDERS_ACUITY_REWARD_ITEMS, itemID)
-                                                local runeContained = tContains(
-                                                    CraftSim.CONST.PATRON_ORDERS_POWER_RUNE_REWARD_ITEMS, itemID)
-                                                if not acuityAllowed and acuityContained then
-                                                    return false
-                                                end
-                                                if not runeAllowed and runeContained then
-                                                    return false
-                                                end
-                                                if not knowledgeAllowed and knowledgeContained then
-                                                    return false
+                                            local function withinMaxPatronOrderCost(averageProfitCached)
+                                                --- if max cost is 0 deactivate cost check
+                                                if maxPatronOrderCost > 0 and isPatronOrder and averageProfitCached < 0 then
+--[[                                                     --Logger:LogDebug("- Crafting cost: " ..
+                                                        GUTIL:FormatMoney(averageProfitCached, true, nil, true)) ]]
+                                                    if math.abs(averageProfitCached) >= maxPatronOrderCost then
+                                                        return false
+                                                    end
+                                                    return true
                                                 end
                                                 return true
-                                            end)
-                                        if not rewardAllowed then
-                                            distributor:Continue()
-                                            return
-                                        end
-                                    end
-
-                                    --- KP max cost is gold willing to pay per point (patron filter), not profit.
-                                    --- Count recipe first-craft KP (1) with patron-listed KP rewards for that check.
-                                    local totalKpForCostCheck = knowledgePointsRewarded
-                                    if isPatronOrder and recipeInfo.firstCraft then
-                                        totalKpForCostCheck = totalKpForCostCheck + 1
-                                    end
-
-                                    recipeData:SetCheapestQualityReagentsMax() -- considers patron reagents
-                                    recipeData:Update()
-
-                                    print("- Knowledge Points Rewarded: " .. tostring(knowledgePointsRewarded))
-
-
-                                    local function withinKPCost(averageProfit)
-                                        if isPatronOrder and totalKpForCostCheck > 0 and averageProfit < 0 then
-                                            local kpCost = math.abs(averageProfit / totalKpForCostCheck)
-
-                                            print("- kpCost: " .. GUTIL:FormatMoney(kpCost, true, nil, true))
-
-                                            if kpCost >= maxKPCost then
-                                                return false
                                             end
-                                            return true
-                                        end
-                                        return true
-                                    end
 
-                                    local function withinMaxPatronOrderCost(averageProfitCached)
-                                        --- if max cost is 0 deactivate cost check
-                                        if maxPatronOrderCost > 0 and isPatronOrder and averageProfitCached < 0 then
-                                            print("- Crafting cost: " ..
-                                                GUTIL:FormatMoney(averageProfitCached, true, nil, true))
-                                            if math.abs(averageProfitCached) >= maxPatronOrderCost then
-                                                return false
-                                            end
-                                            return true
-                                        end
-                                        return true
-                                    end
-
-                                    local function queueRecipe()
-                                        local isAlreadyQueued = CraftSim.CRAFTQ.craftQueue:FindRecipe(recipeData) ~= nil
-                                        if isAlreadyQueued then
-                                            print("Work order is already queued, skipping")
-                                            distributor:Continue()
-                                            return
-                                        end
-
-                                        local allowConcentration = CraftSim.DB.OPTIONS:Get(
-                                            "CRAFTQUEUE_WORK_ORDERS_ALLOW_CONCENTRATION")
-                                        local forceConcentration = CraftSim.DB.OPTIONS:Get(
-                                            "CRAFTQUEUE_WORK_ORDERS_FORCE_CONCENTRATION")
-                                        local qualityWithoutConcentration = recipeData.resultData.expectedQuality
-                                        local queueAble = false
-                                        if recipeData.resultData.expectedQuality >= order.minQuality then
-                                            queueAble = true
-                                        end
-
-                                        if (forceConcentration or allowConcentration) and order.minQuality and
-                                            recipeData.resultData.expectedQualityConcentration == order.minQuality then
-                                            recipeData.concentrating = true
-                                            recipeData:Update()
-                                            queueAble = true
-                                            if qualityWithoutConcentration < order.minQuality then
-                                                local concentrationData = recipeData.concentrationData
-                                                local currentAmount = concentrationData and
-                                                    concentrationData:GetCurrentAmount() or 0
-                                                if recipeData.concentrationCost <= 0 or
-                                                    currentAmount < recipeData.concentrationCost then
-                                                    queueAble = false
-                                                    recipeData.concentrating = false
-                                                    recipeData:Update()
-                                                end
-                                            end
-                                        end
-
-                                        if queueAble then
-                                            if isPublicOrder then
---[[                                                 if order.isFulfillable == false then
+                                            local function queueRecipe()
+                                                local isAlreadyQueued = CraftSim.CRAFTQ.craftQueue:FindRecipe(recipeData) ~= nil
+                                                if isAlreadyQueued then
+                                                    --Logger:LogDebug("Work order is already queued, skipping")
                                                     distributor:Continue()
                                                     return
-                                                end ]]
-                                                if not CraftSim.DB.OPTIONS:Get("CRAFTQUEUE_WORK_ORDERS_ONLY_PROFITABLE") or recipeData.averageProfitCached > 0 then
-                                                    tinsert(publicOrderCandidates, {
-                                                        recipeData = recipeData,
-                                                        averageProfit = recipeData.averageProfitCached,
-                                                    })
                                                 end
-                                            else
-                                                local isWithinKPCost = withinKPCost(recipeData.averageProfitCached)
-                                                local isWithinMaxCost = withinMaxPatronOrderCost(recipeData
-                                                    .averageProfitCached)
-                                                local isKPOrderWithinRange = totalKpForCostCheck > 0 and isWithinKPCost
-                                                if CraftSim.DB.OPTIONS:Get("CRAFTQUEUE_WORK_ORDERS_ONLY_PROFITABLE") and
-                                                    recipeData.averageProfitCached <= 0 and not isKPOrderWithinRange then
-                                                    -- skip: not profitable and not a KP order within range
-                                                elseif isWithinKPCost and isWithinMaxCost then
-                                                    CraftSim.CRAFTQ:AddRecipe { recipeData = recipeData }
-                                                end
-                                            end
-                                        end
 
-                                        distributor:Continue()
+                                                local allowConcentration = CraftSim.DB.OPTIONS:Get(
+                                                    "CRAFTQUEUE_WORK_ORDERS_ALLOW_CONCENTRATION")
+                                                local forceConcentration = CraftSim.DB.OPTIONS:Get(
+                                                    "CRAFTQUEUE_WORK_ORDERS_FORCE_CONCENTRATION")
+                                                local qualityWithoutConcentration = recipeData.resultData.expectedQuality
+                                                local queueAble = false
+                                                if recipeData.resultData.expectedQuality >= order.minQuality then
+                                                    queueAble = true
+                                                end
+
+                                                if (forceConcentration or allowConcentration) and order.minQuality and
+                                                    recipeData.resultData.expectedQualityConcentration == order.minQuality then
+                                                    recipeData.concentrating = true
+                                                    recipeData:Update()
+                                                    queueAble = true
+                                                    if qualityWithoutConcentration < order.minQuality then
+                                                        local concentrationData = recipeData.concentrationData
+                                                        local currentAmount = concentrationData and
+                                                            concentrationData:GetCurrentAmount() or 0
+                                                        if recipeData.concentrationCost <= 0 or
+                                                            currentAmount < recipeData.concentrationCost then
+                                                            queueAble = false
+                                                            recipeData.concentrating = false
+                                                            recipeData:Update()
+                                                        end
+                                                    end
+                                                end
+
+                                                if queueAble then
+                                                    if isPublicOrder then
+        --[[                                                 if order.isFulfillable == false then
+                                                            distributor:Continue()
+                                                            return
+                                                        end ]]
+                                                        if not CraftSim.DB.OPTIONS:Get("CRAFTQUEUE_WORK_ORDERS_ONLY_PROFITABLE") or recipeData.averageProfitCached > 0 then
+                                                            tinsert(publicOrderCandidates, {
+                                                                recipeData = recipeData,
+                                                                averageProfit = recipeData.averageProfitCached,
+                                                            })
+                                                        end
+                                                    else
+                                                        local isWithinKPCost = withinKPCost(recipeData.averageProfitCached)
+                                                        local isWithinMaxCost = withinMaxPatronOrderCost(recipeData
+                                                            .averageProfitCached)
+                                                        local isKPOrderWithinRange = totalKpForCostCheck > 0 and isWithinKPCost
+                                                        if CraftSim.DB.OPTIONS:Get("CRAFTQUEUE_WORK_ORDERS_ONLY_PROFITABLE") and
+                                                            recipeData.averageProfitCached <= 0 and not isKPOrderWithinRange then
+                                                            -- skip: not profitable and not a KP order within range
+                                                        elseif isWithinKPCost and isWithinMaxCost then
+                                                            CraftSim.CRAFTQ:AddRecipe { recipeData = recipeData }
+                                                        end
+                                                    end
+                                                end
+
+                                                distributor:Continue()
+                                            end
+                                            -- try to optimize for target quality
+                                            if order.minQuality and order.minQuality > 0 then
+                                                local maxQuality = (isPatronOrder and
+                                                        CraftSim.DB.OPTIONS:Get("CRAFTQUEUE_WORK_ORDERS_FORCE_CONCENTRATION"))
+                                                    and math.max(order.minQuality - 1, 1) or order.minQuality
+                                                recipeData:Optimize {
+                                                    optimizeGear = true,
+                                                    optimizeReagentOptions = {
+                                                        maxQuality = maxQuality,
+                                                    },
+                                                    finally = queueRecipe,
+                                                }
+                                            else
+                                                queueRecipe()
+                                            end
+                                        else
+                                            distributor:Continue()
+                                        end
                                     end
-                                    -- try to optimize for target quality
-                                    if order.minQuality and order.minQuality > 0 then
-                                        local maxQuality = (isPatronOrder and
-                                                CraftSim.DB.OPTIONS:Get("CRAFTQUEUE_WORK_ORDERS_FORCE_CONCENTRATION"))
-                                            and math.max(order.minQuality - 1, 1) or order.minQuality
-                                        recipeData:Optimize {
-                                            optimizeGear = true,
-                                            optimizeReagentOptions = {
-                                                maxQuality = maxQuality,
-                                            },
-                                            finally = queueRecipe,
-                                        }
-                                    else
-                                        queueRecipe()
-                                    end
-                                else
-                                    distributor:Continue()
-                                end
+                                }:Continue()
                             end
-                        }:Continue()
-                    end
-                end),
-            }
-            C_CraftingOrders.RequestCrafterOrders(request)
+                        end),
+                    }
+                    C_CraftingOrders.RequestCrafterOrders(request)
+                end
+            }:Continue()
         end
     }:Continue()
 end
+
 
 function CraftSim.CRAFTQ:InitializeCraftQueue()
     -- load from Saved Variables
