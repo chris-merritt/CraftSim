@@ -3434,7 +3434,9 @@ end
 
 function CraftSim.CRAFTQ.UI:UpdateQueueDisplay()
     --- use a cache to prevent multiple redundant calls of ItemCount thus increasing performance
+    if not CraftSim.CRAFTQ.itemCountCache then
     CraftSim.CRAFTQ.itemCountCache = {}
+    end
 
     CraftSim.CRAFTQ.UI:UpdateFrameListByCraftQueue()
     local craftQueueFrame = CraftSim.CRAFTQ.frame
@@ -3461,9 +3463,6 @@ function CraftSim.CRAFTQ.UI:UpdateQueueDisplay()
         queueTab.content.createAuctionatorShoppingList:SetEnabled(CraftSim.CRAFTQ.craftQueue and
             #CraftSim.CRAFTQ.craftQueue.craftQueueItems > 0)
     end
-
-    --- disable cache
-    CraftSim.CRAFTQ.itemCountCache = nil
 end
 
 function CraftSim.CRAFTQ.UI:UpdateCraftQueueTotalProfitDisplay()
@@ -3487,21 +3486,19 @@ function CraftSim.CRAFTQ.UI:UpdateCraftQueueTotalProfitDisplay()
 end
 
 local lastRun = 0
-local throttleDelay = 1 -- Only run every 1 second
+local throttleDelay = 3 -- Only run every 3 seconds
 
 function CraftSim.CRAFTQ.UI:UpdateDisplay()
     local now = GetTime()
-    if now > lastRun + (throttleDelay * 3) then
-            lastRun = now
+    if now > lastRun + throttleDelay then
         CraftSim.CRAFTQ.UI:UpdateQuickAccessBarDisplay()
+        lastRun = now
     end
-    if now > lastRun + (throttleDelay / 3) then
-            lastRun = now
-        CraftSim.CRAFTQ.UI:UpdateQueueDisplay()
-        CraftSim.CRAFTQ.UI:UpdateCraftListsDisplay()
-        CraftSim.CRAFTQ.UI:UpdateCraftListsRecipeDisplay()
-    end
+    CraftSim.CRAFTQ.UI:UpdateQueueDisplay()
+    CraftSim.CRAFTQ.UI:UpdateCraftListsDisplay()
+    CraftSim.CRAFTQ.UI:UpdateCraftListsRecipeDisplay()
 end
+
 
 ---@param craftQueueItem CraftSim.CraftQueueItem
 function CraftSim.CRAFTQ.UI:UpdateEditRecipeFrameDisplay(craftQueueItem)
