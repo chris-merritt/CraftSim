@@ -217,6 +217,20 @@ function CraftSim.UTIL:GetExpansionIDBySkillLineID(skillLineID)
     return 0 -- sometimes happens if not yet initialized
 end
 
+---@param itemID number
+---@return string itemName, number itemExpacID
+function CraftSim.UTIL:GetItemExpansionID(itemID)
+    local item = Item:CreateFromItemID(itemID)
+    local itemName, itemExpacID
+
+    item:ContinueOnItemLoad(function()
+        itemName = select(1, C_Item.GetItemInfo(itemID))
+        itemExpacID = select(15, C_Item.GetItemInfo(itemID))
+    end)
+    print(itemName, itemExpacID)
+    return itemName, itemExpacID
+end
+
 ---@param recipeExpansionID CraftSim.EXPANSION_IDS?
 ---@param itemID number?
 ---@param context string? debug context
@@ -226,7 +240,7 @@ function CraftSim.UTIL:IsItemExpansionCompatible(recipeExpansionID, itemID, cont
         return true
     end
 
-    local itemName, _, _, _, _, _, _, _, _, _, _, _, _, _, itemExpacID = C_Item.GetItemInfo(itemID)
+    local itemName, itemExpacID = CraftSim.UTIL:GetItemExpansionID(itemID)
     print(string.format("IsItemExpansionCompatible(%s, %s): recipeExpansionID=%s, itemID=%s, itemExpacID=%s",
         tostring(context), tostring(itemName), tostring(recipeExpansionID), tostring(itemID), tostring(itemExpacID)))
 

@@ -257,8 +257,13 @@ function CraftSim.TOPGEAR:GetProfessionGearCombinations(recipeData)
     local highestItemLevels = {}
     for _, professionGear in pairs(accessoryItems) do
         print("Checking UniquenessIlvls: " .. professionGear.item:GetItemLink())
-        local uniqueCategoryID = select(4, C_Item.GetItemUniquenessByID(professionGear.item:GetItemID()))
+        local itemID = professionGear.item:GetItemID()
+        local uniqueCategoryID = select(4, C_Item.GetItemUniquenessByID(itemID))
         local itemLevel = professionGear:GetItemLevel()
+        local _, itemExpansionID = CraftSim.UTIL:GetItemExpansionID(itemID)
+        if uniqueCategoryID and itemExpansionID then
+            uniqueCategoryID = itemExpansionID..uniqueCategoryID
+        end
 
         if uniqueCategoryID and (not highestItemLevels[uniqueCategoryID] or highestItemLevels[uniqueCategoryID]:GetItemLevel() < itemLevel) then
             highestItemLevels[uniqueCategoryID] = professionGear

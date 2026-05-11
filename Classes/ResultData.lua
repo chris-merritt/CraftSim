@@ -97,6 +97,17 @@ function CraftSim.ResultData:UpdatePossibleResultItems()
             local itemID = item:GetItemID()
             local bonusItemLevel = nil
             baseItemLevel = recipeData.recipeInfo.itemLevel or 0
+            if recipeData.reagentData:HasRequiredSelectableReagent() and
+                recipeData.reagentData.requiredSelectableReagentSlot.activeReagent then
+                    local activeReagent = recipeData.reagentData.requiredSelectableReagentSlot.activeReagent.item:GetItemID()
+                    if activeReagent == 210221 then
+                        baseItemLevel = baseItemLevel - 466
+                    elseif activeReagent == 229388 then
+                        baseItemLevel = baseItemLevel - 465
+                    elseif activeReagent == 230285 then
+                        baseItemLevel = baseItemLevel - 459
+                    end
+                end
             if addItemLevels then
             bonusItemLevel = addItemLevels[quality]
             end

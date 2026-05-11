@@ -1192,9 +1192,16 @@ function CraftSim.CRAFTQ:QueueOpenRecipe()
     end
 
     queueButton:SetEnabled(false)
+
+    local supportsQualities = recipeData.supportsQualities
+    local maxQuality = recipeData.maxQuality
+    if recipeData.orderData and recipeData.orderData.minQuality then
+        maxQuality = recipeData.orderData.minQuality
+    end
+
     recipeData:Optimize {
         optimizeGear = optimizeGear,
-        optimizeReagentOptions = optimizeTopProfit and { highestProfit = true } or nil,
+        optimizeReagentOptions = optimizeTopProfit and { highestProfit = true } or supportsQualities and { maxQuality = maxQuality },
         optimizeConcentration = optimizeConcentration,
         optimizeConcentrationProgressCallback = function(progress)
             queueButton:SetText(string.format("%.0f%%", progress))

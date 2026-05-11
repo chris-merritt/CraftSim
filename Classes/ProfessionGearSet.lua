@@ -80,7 +80,11 @@ function CraftSim.ProfessionGearSet:UpdateProfessionStats()
             return
         end
         local itemID = professionGear.item:GetItemID()
+        local _, itemExpansionID = CraftSim.UTIL:GetItemExpansionID(itemID)
         if CraftSim.UTIL:IsItemExpansionCompatible(recipeExpansionID, itemID, "ProfessionGearSet") then
+            if recipeExpansionID ~= itemExpansionID then
+                professionGear.professionStats.skill.value = 0
+            end
             self.professionStats:add(professionGear.professionStats)
         end
         -- else: older expansion -> contribute 0 stats; item stays for display/equality
