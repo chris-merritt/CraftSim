@@ -386,7 +386,8 @@ end
 ---@return string
 local function FormatMidnightShatterTooltipAppend(shatterRD, canCastShatter, shatterReasonExtra, shatterHint,
                                                   activeReagent)
-    local ownedCount = C_Item.GetItemCount(activeReagent:GetItemID(), true, false, true, true)
+    local crafterUID = CraftSim.UTIL:GetPlayerCrafterUID()
+    local ownedCount = CraftSim.ITEM_COUNT:Get(crafterUID, activeReagent:GetItemID())
     local ownedCountText = " (" .. tostring(ownedCount) .. ")"
     local moteWithIcon = GUTIL:IconToText(activeReagent:GetItemIcon(), 15, 15) .. " " ..
         activeReagent:GetItemLink() .. ownedCountText
@@ -3504,11 +3505,11 @@ function CraftSim.CRAFTQ.UI:UpdateDisplay()
     local now = GetTime()
     if now > lastRun + throttleDelay then
         CraftSim.CRAFTQ.UI:UpdateQuickAccessBarDisplay()
+        CraftSim.CRAFTQ.UI:UpdateCraftListsDisplay()
+        CraftSim.CRAFTQ.UI:UpdateCraftListsRecipeDisplay()
         lastRun = now
     end
     CraftSim.CRAFTQ.UI:UpdateQueueDisplay()
-    CraftSim.CRAFTQ.UI:UpdateCraftListsDisplay()
-    CraftSim.CRAFTQ.UI:UpdateCraftListsRecipeDisplay()
 end
 
 

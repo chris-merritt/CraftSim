@@ -48,8 +48,11 @@ function CraftSim.ITEM_COUNT:Get(crafterUID, itemID, excludeWarbank)
     end
 end
 
+local checked = {}
+
 ---@param itemID ItemID
 function CraftSim.ITEM_COUNT:UpdateAllCountsForItemID(itemID)
+    if checked[itemID] then return end
     local crafterUID = CraftSim.UTIL:GetPlayerCrafterUID()
 
     local inventoryCount = C_Item.GetItemCount(itemID, false, false, false, false)
@@ -57,9 +60,11 @@ function CraftSim.ITEM_COUNT:UpdateAllCountsForItemID(itemID)
     local accountBankCount = math.max(0, C_Item.GetItemCount(itemID, false, false, false, true) - inventoryCount)
 
     CraftSim.DB.ITEM_COUNT:UpdateItemCounts(crafterUID, itemID, inventoryCount, bankCount, accountBankCount)
+    checked[itemID] = true
 end
 
 function CraftSim.ITEM_COUNT:BAG_UPDATE_DELAYED()
+    checked = {}
     CraftSim.ITEM_COUNT:UpdateItemCountForCharacter()
 end
 
