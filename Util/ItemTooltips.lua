@@ -85,7 +85,7 @@ function CraftSim.ITEM_TOOLTIPS:HookItemTooltips()
         if not tooltipInfo or not tooltipInfo.id then return end
 
         local itemID = tooltipInfo.id
-        local itemLink = tooltipInfo.hyperlink
+        local itemLink = tooltipInfo.hyperlink or (tooltipInfo.guid and C_Item.GetItemLinkByGUID(tooltipInfo.guid))
 
         local crafterUID, cost, timestamp
         if itemLink then

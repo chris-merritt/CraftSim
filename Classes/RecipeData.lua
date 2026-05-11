@@ -597,6 +597,7 @@ function CraftSim.RecipeData:SetAllReagentsBySchematicForm()
                 end
                 if not craftSimReagentItem then
                     error("Error: Open Recipe Reagent not included in recipeData")
+                    return
                 end
                 craftSimReagentItem.quantity = allocations
             end
