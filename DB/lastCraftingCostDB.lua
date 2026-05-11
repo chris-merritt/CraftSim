@@ -74,6 +74,7 @@ function CraftSim.DB.LAST_CRAFTING_COST:Save(recipeData)
     local expectedCostsPerItem = recipeData.priceData and recipeData.priceData.expectedCostsPerItem or 0
     local timestamp = time()
 
+
     print("Saving LastCraftingCost: " .. tostring(recipeData.recipeName) .. " q" .. tostring(expectedQuality) .. " crafter=" .. crafterUID)
 
     CraftSimDB.lastCraftingCostDB.data[key] = CraftSimDB.lastCraftingCostDB.data[key] or {}
@@ -81,6 +82,15 @@ function CraftSim.DB.LAST_CRAFTING_COST:Save(recipeData)
         cost = expectedCostsPerItem,
         timestamp = timestamp,
     }
+    -- for TSM
+    if recipeData.isGear then
+        local tsmItemString = recipeData.resultData.expectedItemStringTSM
+        CraftSimDB.lastCraftingCostDB.data[tsmItemString] = CraftSimDB.lastCraftingCostDB.data[tsmItemString] or {}
+        CraftSimDB.lastCraftingCostDB.data[tsmItemString][crafterUID] = {
+            cost = expectedCostsPerItem,
+            timestamp = timestamp,
+        }
+    end
 end
 
 --- Get all crafter entries for a non-gear item.
@@ -88,6 +98,13 @@ end
 ---@return table<CrafterUID, CraftSim.LastCraftingCostData>?
 function CraftSim.DB.LAST_CRAFTING_COST:GetByItemID(itemID)
     local key = self:GetKeyByItemID(itemID)
+    return CraftSimDB.lastCraftingCostDB.data[key]
+end
+
+---@param tsmItemString string
+---@return table<CrafterUID, CraftSim.LastCraftingCostData>?
+function CraftSim.DB.LAST_CRAFTING_COST:GetByTSMItemString(tsmItemString)
+    local key = tsmItemString
     return CraftSimDB.lastCraftingCostDB.data[key]
 end
 
@@ -143,6 +160,20 @@ end
 ---@return number? cheapestTimestamp
 function CraftSim.DB.LAST_CRAFTING_COST:GetCheapestByItemID(itemID)
     return self:GetCheapestEntry(self:GetByItemID(itemID))
+end
+
+function CraftSim.DB.LAST_CRAFTING_COST:GetCheapestByTSMItemString(itemLink, tsmItemString)
+        local itemID = select(1, C_Item.GetItemInfoInstant(itemLink))
+        print(itemID)
+    if string.find(tsmItemString, "::") then
+        local itemLevel = C_Item.GetDetailedItemLevelInfo(itemLink)
+        local tsmItemLevelString = "i:"..tostring(itemID).."::i"..tostring(itemLevel)
+        print(tsmItemLevelString)
+        return self:GetCheapestEntry(self:GetByTSMItemString(tsmItemLevelString))
+    else
+        print("using itemID: ", itemID)
+        return self:GetCheapestEntry(self:GetByItemID(itemID))
+    end
 end
 
 --- Get the cheapest crafter entry for a gear item by itemID and qualityID.
