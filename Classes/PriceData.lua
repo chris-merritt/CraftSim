@@ -195,24 +195,31 @@ function CraftSim.PriceData:Update()
         end
     end
 
-    for i, item in pairs(resultData.itemsByQuality) do
-        -- if its gear, it should have a loaded link as we created the item with it
-        -- if its not gear we get the price by id
-        local itemID = item:GetItemID()
-        local itemPrice = CraftSim.DB.PRICE_OVERRIDE:GetResultOverridePrice(self.recipeData.recipeID, i)
-        if not itemPrice then
-            if CraftSim.UTIL:IsGreyItem(itemID) then
-                -- Grey/junk items cannot be sold on the AH; use vendor sell price directly.
-                itemPrice = CraftSim.UTIL:GetVendorSellPriceByItemID(itemID)
-            elseif self.recipeData.isGear then
-                itemPrice = CraftSimAUCTIONATOR:GetMinBuyoutByItemLink(item:GetItemLink())
-            else
-                itemPrice = CraftSim.PRICE_SOURCE:GetMinBuyoutByItemID(itemID)
-            end
+    if CraftSimTSM:IsAvailable() then
+        for i, item in pairs(resultData.itemsByQualityTSM) do
+            local tsmItemString = item
+            local itemPrice = CraftSimTSM:GetMinBuyoutByTSMItemString(tsmItemString, false)
+            table.insert(self.qualityPriceList, itemPrice)
         end
-        table.insert(self.qualityPriceList, itemPrice)
+    else
+        for i, item in pairs(resultData.itemsByQuality) do
+            -- if its gear, it should have a loaded link as we created the item with it
+            -- if its not gear we get the price by id
+            local itemID = item:GetItemID()
+            local itemPrice = CraftSim.DB.PRICE_OVERRIDE:GetResultOverridePrice(self.recipeData.recipeID, i)
+            if not itemPrice then
+                if CraftSim.UTIL:IsGreyItem(itemID) then
+                    -- Grey/junk items cannot be sold on the AH; use vendor sell price directly.
+                    itemPrice = CraftSim.UTIL:GetVendorSellPriceByItemID(itemID)
+                elseif self.recipeData.isGear then
+                    itemPrice = CraftSimAUCTIONATOR:GetMinBuyoutByItemLink(item:GetItemLink())
+                else
+                    itemPrice = CraftSim.PRICE_SOURCE:GetMinBuyoutByItemID(itemID)
+                end
+            end
+            table.insert(self.qualityPriceList, itemPrice)
+        end
     end
-
 
     if self.recipeData.supportsResourcefulness then
         self.resourcefulnessSavedCosts = CraftSim.CALC:GetResourcefulnessSavedCosts(self.recipeData)
