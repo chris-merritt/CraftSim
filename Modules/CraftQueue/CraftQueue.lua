@@ -267,7 +267,7 @@ function CraftSim.CRAFTQ:QueueWorkOrders()
             queueWorkOrdersButton:SetText(L("CRAFT_QUEUE_ADD_WORK_ORDERS_BUTTON_LABEL"))
             queueWorkOrdersButton:SetEnabled(CraftSim.UTIL:ShouldEnableCraftQueueAddWorkOrdersButton())
             CraftSim.CRAFTQ.queuingWorkOrders = false
-            self:CreateAutoShoppingListAfterQueue()
+            --self:CreateAutoShoppingListAfterQueue()
             --Logger:LogDebug("Reset SkillLineId to : "..tostring(startSkillLineID))
             C_TradeSkillUI.SetProfessionChildSkillLineID(startSkillLineID)
         end,
