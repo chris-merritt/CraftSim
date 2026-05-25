@@ -342,9 +342,9 @@ function CraftSim.CRAFT_LISTS:QueueList(list, crafterUID, finally)
 
         -- reduce queue amount by current inventory if option is set
         if options.subtractInventory then
-            local itemID = recipeData.resultData.expectedItem:GetItemID()
-            if itemID then
-                local owned = CraftSim.CRAFTQ:GetItemCountFromCraftQueueCache(crafterUID, itemID, false) or 0
+            local tsmItemString = recipeData.resultData.expectedItemStringTSM
+            if tsmItemString then
+                local owned = CraftSimTSM:GetOwned(tsmItemString) or 0
                 queueAmount = math.max(0, queueAmount - owned)
             end
         end
