@@ -47,12 +47,12 @@ local print = CraftSim.DEBUG:RegisterDebugID("Database.craftListsDB")
 ---@return CraftSim.CraftList.Options
 local function DefaultOptions()
     return {
-        enableConcentration = true,
+        enableConcentration = false,
         optimizeConcentration = true,
         smartConcentrationQueuing = false,
         offsetConcentrationCraftAmount = false,
         optimizeProfessionTools = true,
-        autoselectTopProfitQuality = true,
+        autoselectTopProfitQuality = false,
         optimizeFinishingReagents = false,
         includeSoulboundFinishingReagents = false,
         onlyHighestQualitySoulboundFinishingReagents = false,
@@ -62,10 +62,10 @@ local function DefaultOptions()
         offsetQueueAmount = 0,
         reagentAllocation = "OPTIMIZE_HIGHEST",
         enableUnlearned = false,
-        useTSMRestockExpression = false,
-        tsmRestockExpression = "1",
-        subtractInventory = false,
-        onlyProfitable = false,
+        useTSMRestockExpression = true,
+        tsmRestockExpression = "craftsimrestock",
+        subtractInventory = true,
+        onlyProfitable = true,
     }
 end
 
