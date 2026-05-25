@@ -483,6 +483,7 @@ function CraftSim.LOCAL_EN:GetData()
         RECIPE_SCAN_REMOVE_FROM_CRAFT_LIST = f.r("Remove") .. " from Craft List",
         RECIPE_SCAN_CRAFT_LISTS_TOOLTIP_HEADER = f.bb("Craft Lists") .. ":",
         RECIPE_SCAN_PROFIT_MARGIN_THRESHOLD = "Profit Margin Threshold (%): ",
+        RECIPE_SCAN_PROFIT_MARGIN_ABSOLUTE = "Absolute Profit Margin (Gold): ",
         RECIPE_SCAN_DEFAULT_QUEUE_AMOUNT = "Default Queue Amount: ",
         RECIPE_SCAN_ADD_TO_CRAFT_QUEUE = "Add to Craft Queue",
         RECIPE_SCAN_SORT_BY = "Sort By",

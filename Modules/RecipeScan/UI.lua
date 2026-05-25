@@ -296,6 +296,27 @@ function CraftSim.RECIPE_SCAN.UI:InitRecipeScanTab(recipeScanTab)
                 }
             end, 200, 25, "RECIPE_SCAN_SEND_TO_CRAFT_QUEUE_PROFIT_MARGIN_INPUT")
 
+                        GUTIL:CreateReuseableMenuUtilContextMenuFrame(rootDescription, function(frame)
+                frame.label = GGUI.Text {
+                    parent = frame,
+                    anchorPoints = { { anchorParent = frame, anchorA = "LEFT", anchorB = "LEFT" } },
+                    text = L("RECIPE_SCAN_PROFIT_MARGIN_ABSOLUTE"),
+                    justifyOptions = { type = "H", align = "LEFT" },
+                }
+                frame.input = GGUI.NumericInput {
+                    parent = frame, anchorParent = frame,
+                    sizeX = 30, sizeY = 25, offsetX = 5,
+                    anchorA = "RIGHT", anchorB = "RIGHT",
+                    initialValue = CraftSim.DB.OPTIONS:Get("RECIPESCAN_SEND_TO_CRAFTQUEUE_PROFIT_MARGIN_ABSOLUTE"),
+                    borderAdjustWidth = 1.32,
+                    allowDecimals = true,
+                    onNumberValidCallback = function(input)
+                        CraftSim.DB.OPTIONS:Save("RECIPESCAN_SEND_TO_CRAFTQUEUE_PROFIT_MARGIN_ABSOLUTE",
+                            tonumber(input.currentValue))
+                    end,
+                }
+            end, 200, 25, "RECIPE_SCAN_SEND_TO_CRAFT_QUEUE_PROFIT_ABSOLUTE_INPUT")
+
             GUTIL:CreateReuseableMenuUtilContextMenuFrame(rootDescription, function(frame)
                 frame.label = GGUI.Text {
                     parent = frame,
@@ -788,6 +809,27 @@ function CraftSim.RECIPE_SCAN.UI:CreateProfessionTabContent(row, content)
                     end,
                 }
             end, 200, 25, "RECIPE_SCAN_SCAN_PROFIT_MARGIN_INPUT")
+
+                        GUTIL:CreateReuseableMenuUtilContextMenuFrame(rootDescription, function(frame)
+                frame.label = GGUI.Text {
+                    parent = frame,
+                    anchorPoints = { { anchorParent = frame, anchorA = "LEFT", anchorB = "LEFT" } },
+                    text = L("RECIPE_SCAN_PROFIT_MARGIN_ABSOLUTE"),
+                    justifyOptions = { type = "H", align = "LEFT" },
+                }
+                frame.input = GGUI.NumericInput {
+                    parent = frame, anchorParent = frame,
+                    sizeX = 30, sizeY = 25, offsetX = 5,
+                    anchorA = "RIGHT", anchorB = "RIGHT",
+                    initialValue = CraftSim.DB.OPTIONS:Get("RECIPESCAN_SCAN_PROFIT_MARGIN_ABSOLUTE"),
+                    borderAdjustWidth = 1.32,
+                    allowDecimals = true,
+                    onNumberValidCallback = function(input)
+                        CraftSim.DB.OPTIONS:Save("RECIPESCAN_SCAN_PROFIT_MARGIN_ABSOLUTE",
+                            tonumber(input.currentValue))
+                    end,
+                }
+            end, 200, 25, "RECIPE_SCAN_SCAN_PROFIT_ABSOLUTE_INPUT")
 
             if TSM_API then
                 GUTIL:CreateReuseableMenuUtilContextMenuFrame(rootDescription, function(frame)
