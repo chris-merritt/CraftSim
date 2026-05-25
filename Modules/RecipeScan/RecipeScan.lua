@@ -457,6 +457,11 @@ function CraftSim.RECIPE_SCAN:ScanRow(row)
                 }
             end
 
+            if CraftSim.DB.OPTIONS:Get("RECIPESCAN_SEND_TO_CRAFTQUEUE_CREATE_CRAFT_LIST") then
+                finalizeRecipeAndContinue()
+                return
+            end
+
             recipeData:Optimize {
                 finally = function()
                     finalizeRecipeAndContinue()
@@ -626,6 +631,8 @@ function CraftSim.RECIPE_SCAN:SendToCraftQueue()
 
     if #activeRows <= 0 then return end
 
+    local isCreateCraftList = CraftSim.DB.OPTIONS:Get("RECIPESCAN_SEND_TO_CRAFTQUEUE_CREATE_CRAFT_LIST")
+
     local selectedRow = professionList.selectedRow --[[@as CraftSim.RECIPE_SCAN.PROFESSION_LIST.ROW]]
 
     if not selectedRow then
@@ -639,6 +646,7 @@ function CraftSim.RECIPE_SCAN:SendToCraftQueue()
     end
 
     local filteredResults = GUTIL:Filter(results, function(recipeData)
+        if isCreateCraftList then return true end
         local marginThreshold = CraftSim.DB.OPTIONS:Get("RECIPESCAN_SEND_TO_CRAFTQUEUE_PROFIT_MARGIN_THRESHOLD")
         local relativeProfit = recipeData.relativeProfitCached
 
@@ -654,7 +662,7 @@ function CraftSim.RECIPE_SCAN:SendToCraftQueue()
     end)
 
     -- If "Create CraftList" mode is enabled, show name popup and create a craft list
-    if CraftSim.DB.OPTIONS:Get("RECIPESCAN_SEND_TO_CRAFTQUEUE_CREATE_CRAFT_LIST") then
+    if isCreateCraftList then
         CraftSim.CRAFTQ.UI:ShowCraftListNamePopup(
             L("CRAFT_LISTS_CREATE_POPUP_TITLE"),
             L("CRAFT_LISTS_NEW_LIST_DEFAULT_NAME"),
