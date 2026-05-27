@@ -382,13 +382,10 @@ function CraftSim.RECIPE_SCAN:ScanRow(row)
                         end
                     end
 
-                    -- *10000 to convert gold to coppper
-                    local profitMarginAbsolute = CraftSim.DB.OPTIONS:Get("RECIPESCAN_SCAN_PROFIT_MARGIN_ABSOLUTE")*10000
+                    -- Apply absolute profit filter
+                    local profitMarginAbsolute = CraftSim.DB.OPTIONS:Get("RECIPESCAN_SCAN_PROFIT_MARGIN_ABSOLUTE")*10000 -- to convert gold to coppper
                     if profitMarginAbsolute > 0 then
-                        local expectedCost = recipeData.priceData.expectedCostsPerItem or 0
-                        local expectedQuality = recipeData.resultData.expectedQuality or 1
-                        local expectedSale = recipeData.priceData.qualityPriceList[expectedQuality] or 0
-                        local absoluteProfit = (expectedSale - expectedCost) or 0
+                        local absoluteProfit = recipeData.averageProfitCached or 0
                         if absoluteProfit < profitMarginAbsolute then
                             printS("Recipe filtered by absolute profit " .. tostring(recipeInfo.recipeID))
                             frameDistributor:Continue()
@@ -651,14 +648,11 @@ function CraftSim.RECIPE_SCAN:SendToCraftQueue()
         local relativeProfit = recipeData.relativeProfitCached
 
         --*10000 to convert gold to coppper
-        local profitMarginAbsolute = CraftSim.DB.OPTIONS:Get("RECIPESCAN_SCAN_PROFIT_MARGIN_ABSOLUTE")*10000
+        local profitMarginAbsolute = CraftSim.DB.OPTIONS:Get("RECIPESCAN_SEND_TO_CRAFTQUEUE_PROFIT_MARGIN_ABSOLUTE")*10000
 
         if profitMarginAbsolute == 0 and marginThreshold == 0 then return true end
-        local expectedCost = recipeData.priceData.expectedCostsPerItem or 0
-        local expectedQuality = recipeData.resultData.expectedQuality or 1
-        local expectedSale = recipeData.priceData.qualityPriceList[expectedQuality] or 0
-        local absoluteProfit = (expectedSale - expectedCost) or 0
-        return absoluteProfit >= profitMarginAbsolute or relativeProfit >= marginThreshold;
+        local absoluteProfit = recipeData.averageProfitCached or 0
+        return absoluteProfit >= profitMarginAbsolute and relativeProfit >= marginThreshold;
     end)
 
     -- If "Create CraftList" mode is enabled, show name popup and create a craft list
