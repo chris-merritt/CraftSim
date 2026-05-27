@@ -476,10 +476,16 @@ function CraftSim.CRAFT_LISTS:QueueList(list, crafterUID, finally)
                 end,
             } or nil,
             finally = function()
-                if options.onlyProfitable and recipeData.averageProfitCached and recipeData.averageProfitCached <= 0 then
-                    print("Skipping non-profitable recipe: " .. recipeData.recipeName)
-                    frameDistributor:Continue()
-                    return
+                local absoluteProfit = 50000
+                local relativeProfit = 3
+                if options.onlyProfitable and (absoluteProfit > 0 or relativeProfit > 0) then
+                    local averageProfitCached = recipeData.averageProfitCached
+                    local relativeProfitCached = recipeData.relativeProfitCached
+                    if averageProfitCached < absoluteProfit or relativeProfitCached < relativeProfit then
+                        print("Skipping non-profitable recipe: " .. recipeData.recipeName)
+                        frameDistributor:Continue()
+                        return
+                    end
                 end
 
                 if targetQuality and recipeData.resultData.expectedQuality ~= targetQuality then
