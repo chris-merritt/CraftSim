@@ -319,9 +319,7 @@ function CraftSim.CRAFT_LISTS:QueueList(list, crafterUID, finally)
 
         -- adapt by TSM restock expression if enabled and available, otherwise use restockmaxamount if set
         if TSM_API and options.useTSMRestockExpression then
-            local itemLink = recipeData.resultData.expectedItem:GetItemLink()
-            if itemLink then
-                local tsmItemString = TSM_API.ToItemString(itemLink)
+                local tsmItemString = recipeData.resultData.expectedItemStringTSM
                 if tsmItemString then
                     local tsmAmount = TSM_API.GetCustomPriceValue(
                         options.tsmRestockExpression or "1",
@@ -330,7 +328,6 @@ function CraftSim.CRAFT_LISTS:QueueList(list, crafterUID, finally)
                     recipeMaxQueueAmount = recipeMaxQueueAmount and math.min(recipeMaxQueueAmount, maxTSMAmount) or
                         maxTSMAmount
                 end
-            end
         elseif recipeEntry and recipeEntry.restockMaxAmount and recipeEntry.restockMaxAmount > 0 then
             local maxRestockAmount = recipeEntry.restockMaxAmount + offsetAmount
             recipeMaxQueueAmount = recipeMaxQueueAmount and math.min(recipeMaxQueueAmount, maxRestockAmount) or
