@@ -74,6 +74,16 @@ function CraftSim.ProfessionStats:GetStatList()
 		.craftingspeed }
 end
 
+function CraftSim.ProfessionStats:GetStatListFiltered(supportedStats)
+	local stats = {}
+	for stat, v in pairs(supportedStats) do
+		if v then
+		tinsert(stats, self[stat])
+		end
+	end
+	return stats
+end
+
 ---@params professionStatsB CraftSim.ProfessionStats
 function CraftSim.ProfessionStats:subtract(professionStatsB)
 	local statsA = self:GetStatList()

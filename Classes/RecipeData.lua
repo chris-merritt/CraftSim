@@ -1625,6 +1625,49 @@ function CraftSim.RecipeData:OptimizeFinishingReagentsPermutation(options)
                 possibleReagents = filteredReagents
             end
 
+            -- filter out reagents that give no value
+            local filteredReagents = {}
+            for _, reagent in ipairs(possibleReagents) do
+                local supportedStats = {skill = self.supportsCraftingStats and self.supportsQualities, craftingspeed = self.supportsCraftingspeed,
+                    resourcefulness = self. supportsResourcefulness, multicraft = self.supportsMulticraft, ingenuity = self.supportsIngenuity and self.concentrating}
+                local statList = reagent.professionStats:GetStatListFiltered(supportedStats)
+                local isCurrency = reagent:IsCurrency()
+                local itemID = not isCurrency and reagent.item:GetItemID()
+                local isItemSoulbound = GUTIL:isItemSoulbound(itemID)
+                if not options.includeSoulbound and isItemSoulbound then
+                    break
+                end
+                local reagentPrice = not isCurrency and (self.priceData.reagentPriceInfos[itemID].itemPrice or 0)
+                local lowestItemPrice
+                for _, price in pairs(self.priceData.qualityPriceList) do
+                    if not lowestItemPrice or price < lowestItemPrice then
+                        lowestItemPrice = price or 0
+                    end
+                end
+
+
+                for _, stat in pairs(statList) do
+                    local isViable = true
+                    local hasStat = false
+                    if stat.value and stat.value ~= 0 then
+                        hasStat = true
+                    elseif stat.extraValues and #stat.extraValues > 0 then
+                        hasStat = true
+                    end
+                    if itemID and not isItemSoulbound and hasStat then
+                        if stat.name == "skill" then
+                            isViable = true
+                        elseif reagentPrice > lowestItemPrice then
+                            isViable = false
+                        end
+                    else
+                        isViable = true
+                    end
+                    if hasStat and isViable then table.insert(filteredReagents, reagent)  end
+                end
+                possibleReagents = filteredReagents
+            end
+
             for _, reagent in ipairs(possibleReagents) do
                 local isViable = false
                 if reagent:IsCurrency() then
